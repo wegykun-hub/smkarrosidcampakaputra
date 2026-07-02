@@ -1,10 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
-@themes {
+@theme {
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-serif: 'Playfair Display', serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ── Prevent swipe-back/forward navigation on mobile ────── */
+html {
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+}
+
+body {
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  /* Prevent iOS rubber-band scroll that triggers swipe navigation */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent horizontal swipe gesture on the app root */
+#root {
+  overscroll-behavior-x: none;
+  touch-action: pan-y pinch-zoom;
+  overflow-x: hidden;
+}
+
+/* Prevent swipe on all scrollable containers */
+* {
+  overscroll-behavior-x: none;
 }
 
 /* Custom Legacy Keyframe Animations safe for Tailwind compile */

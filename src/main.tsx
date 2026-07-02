@@ -3,53 +3,43 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// ── Prevent swipe-back/forward navigation on mobile ─────────────────────────
-// Deteksi swipe horizontal dan batalkan kalau bukan scroll dalam elemen
+// ── Prevent browser swipe-back/forward — hanya blokir swipe HORIZONTAL ──────
+// Scroll vertikal tetap berfungsi normal
+
 let touchStartX = 0;
 let touchStartY = 0;
+let isSwiping = false;
 
 document.addEventListener('touchstart', (e) => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    isSwiping = false;
+  }
 }, { passive: true });
 
 document.addEventListener('touchmove', (e) => {
-  const dx = Math.abs(e.touches[0].clientX - touchStartX);
-  const dy = Math.abs(e.touches[0].clientY - touchStartY);
+  if (e.touches.length !== 1 || isSwiping) return;
 
-  // Kalau gerakan horizontal lebih dominan dari vertikal, cegah swipe navigation
-  if (dx > dy && dx > 10) {
-    // Cek apakah target adalah elemen yang perlu horizontal scroll (carousel, table, dll)
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+
+  // Hanya blokir kalau gerak HORIZONTAL lebih dominan dari vertikal
+  // Dan geraknya lebih dari 15px (bukan micro-movement)
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 15) {
     const target = e.target as HTMLElement;
-    const scrollable = target.closest('[data-allow-swipe]') ||
-                       target.closest('.overflow-x-auto') ||
-                       target.closest('.no-scrollbar') ||
-                       target.closest('table') ||
-                       target.closest('.swiper');
 
-    if (!scrollable) {
-      // Bukan elemen scroll horizontal — blokir swipe navigation browser
-      e.preventDefault();
+    // Izinkan scroll horizontal di elemen yang memang perlu horizontal scroll
+    const allowHorizontal = target.closest('.overflow-x-auto') ||
+                            target.closest('[data-allow-swipe]') ||
+                            target.closest('.swiper') ||
+                            target.closest('.carousel') ||
+                            target.closest('input[type="range"]');
+
+    if (!allowHorizontal) {
+      e.preventDefault();  // Blokir swipe navigation browser
+      isSwiping = true;
     }
-  }
-}, { passive: false });
-
-// Blokir swipe dari tepi kiri/kanan layar (zona 20px) yang biasanya trigger back/forward
-document.addEventListener('touchstart', (e) => {
-  const x = e.touches[0].clientX;
-  const screenWidth = window.innerWidth;
-  // Zona tepi kiri (back) dan tepi kanan (forward)
-  if (x < 20 || x > screenWidth - 20) {
-    // Ini mungkin swipe navigation gesture — tandai
-    (document as any).__edgeSwipe = true;
-  } else {
-    (document as any).__edgeSwipe = false;
-  }
-}, { passive: true });
-
-document.addEventListener('touchmove', (e) => {
-  if ((document as any).__edgeSwipe) {
-    e.preventDefault();
   }
 }, { passive: false });
 

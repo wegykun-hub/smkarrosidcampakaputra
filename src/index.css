@@ -9,27 +9,17 @@
 
 /* ── Prevent swipe-back/forward navigation on mobile ────── */
 html {
-  overscroll-behavior: none;
-  overscroll-behavior-x: none;
+  overscroll-behavior-x: none;  /* Blokir swipe horizontal saja */
 }
 
 body {
-  overscroll-behavior: none;
   overscroll-behavior-x: none;
-  /* Prevent iOS rubber-band scroll that triggers swipe navigation */
-  -webkit-overflow-scrolling: touch;
 }
 
-/* Prevent horizontal swipe gesture on the app root */
+/* Jangan blokir scroll vertikal */
 #root {
-  overscroll-behavior-x: none;
-  touch-action: pan-y pinch-zoom;
   overflow-x: hidden;
-}
-
-/* Prevent swipe on all scrollable containers */
-* {
-  overscroll-behavior-x: none;
+  touch-action: pan-y pinch-zoom; /* Izinkan scroll vertikal + zoom, blokir horizontal */
 }
 
 /* Custom Legacy Keyframe Animations safe for Tailwind compile */

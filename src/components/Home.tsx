@@ -107,10 +107,10 @@ export default function Home({ setTab, onNewsClick, newsList = NEWS_DATA, slides
   ];
 
   const stats = [
-    { value: "540+", label: "Siswa Aktif", icon: Users },
+    { value: "100+", label: "Siswa Aktif", icon: Users },
     { value: "2", label: "Jurusan Favorit", icon: BookOpen },
-    { value: "35+", label: "Guru & Staf Ahli", icon: Award },
-    { value: "48+", label: "DUDIKA Mitra Industri", icon: Briefcase },
+    { value: "15+", label: "Guru & Staf Ahli", icon: Award },
+    { value: "10+", label: "DUDIKA Mitra Industri", icon: Briefcase },
   ];
 
   return (

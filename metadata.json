@@ -1,0 +1,6 @@
+{
+  "name": "SMK Ar Rosyid Campaka Putra",
+  "description": "Website Profil Resmi dan SPMB Online SMK Ar Rosyid Campaka Putra",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

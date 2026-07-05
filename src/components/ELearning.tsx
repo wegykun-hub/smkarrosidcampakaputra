@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { 
   BookOpen, Video, FileText, Upload, Plus, Trash2, Award, 
   CheckCircle, PlayCircle, GraduationCap, Lock, ArrowLeft,
@@ -13,6 +13,7 @@ import {
 } from "../lib/services/elearningService";
 import { fetchStudents } from "../lib/services/rosterService";
 import { uploadWebsiteImage } from "../lib/services/storageService";
+import ModalNotif, { useNotif } from "./ModalNotif";
 
 interface ELearningProps {
   initialSubTab?: string;
@@ -166,6 +167,7 @@ const QUIZ_QUESTIONS = [
 ];
 
 export default function ELearning({ initialSubTab = "siswa", settings }: ELearningProps) {
+  const { notif, closeNotif, notifSuccess, notifError, notifWarning, notifConfirm } = useNotif();
   const [courses, setCourses] = useState<Course[]>(DEFAULT_COURSES);
   const [submissions, setSubmissions] = useState<StudentSubmission[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -251,7 +253,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
     const cleanName = studentName.trim().toUpperCase();
 
     if (!cleanName || !cleanNisn) {
-      alert("⚠️ Harap isi Nama Lengkap dan NISN siswa!");
+      notifError('Form Tidak Lengkap', 'Harap isi Nama Lengkap dan NISN siswa!');
       return;
     }
 
@@ -281,7 +283,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
     }
 
     setLoginSiswaLoading(false);
-    alert(`❌ NISN "${cleanNisn}" tidak terdaftar di E-Learning atau non-aktif.\nMinta admin untuk mendaftarkan akun E-Learning Anda terlebih dahulu.`);
+    notifError('NISN Tidak Terdaftar', 'NISN ' + cleanNisn + ' tidak terdaftar di E-Learning atau non-aktif. Minta admin untuk mendaftarkan akun E-Learning Anda.');
   };
 
   // ── Login Guru via Supabase (verifikasi PIN) ──────────────
@@ -289,7 +291,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
     e.preventDefault();
     const cleanPin = teacherPin.trim();
     if (!cleanPin) {
-      alert("⚠️ PIN harus diisi!");
+      notifError('Form Kosong', 'PIN harus diisi!');
       return;
     }
 
@@ -301,7 +303,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
       setLoggedInGuru(found);
       setIsAuthenticatedGuru(true);
     } else {
-      alert("❌ PIN Guru salah atau akun dinonaktifkan!\nPeriksa akun E-Learning guru di Admin Panel.");
+      notifError('PIN Salah', 'PIN Guru salah atau akun dinonaktifkan! Periksa akun E-Learning guru di Admin Panel.');
     }
   };
 
@@ -341,11 +343,11 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
   const handleAddModule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newModuleTitle.trim() || !newModuleDesc.trim() || !newModuleTargetCourse || !newModuleFileName) {
-      alert("⚠️ Harap lengkapi semua isian materi baru dan unggah berkas file!");
+      notifError('Form Tidak Lengkap', 'Harap lengkapi semua isian materi baru dan unggah berkas file!');
       return;
     }
     if (isUploadingModule) {
-      alert("⏳ Mohon tunggu, file masih dalam proses upload...");
+      notifWarning('Upload Belum Selesai', 'Mohon tunggu, file masih dalam proses upload...');
       return;
     }
 
@@ -369,13 +371,13 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
     await saveCourses(updated);
     setNewModuleTitle(""); setNewModuleDesc("");
     setNewModuleFileName(""); setNewModuleFileBase64("");
-    alert("✓ Materi Belajar Berhasil Diterbitkan ke Siswa dan disimpan ke database!");
+    notifSuccess('Materi Diterbitkan', 'Materi Belajar berhasil diterbitkan ke Siswa dan disimpan ke database!');
   };
 
   const handleAddAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAsgTitle.trim() || !newAsgInstruction.trim() || !newAsgDueDate || !newModuleTargetCourse) {
-      alert("⚠️ Harap lengkapi semua isian tugas baru!");
+      notifError('Form Tidak Lengkap', 'Harap lengkapi semua isian tugas baru!');
       return;
     }
 
@@ -394,7 +396,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
 
     await saveCourses(updated);
     setNewAsgTitle(""); setNewAsgInstruction(""); setNewAsgDueDate("");
-    alert("✓ Tugas Belajar Baru Berhasil Diterbitkan!");
+    notifSuccess('Tugas Diterbitkan', 'Tugas Belajar Baru berhasil diterbitkan!');
   };
 
   const handleFileUpload = (asgId: string, courseId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -436,7 +438,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
       // Simpan ke Supabase
       const result = await insertSubmission(newSub as any);
       if (!result.success) {
-        alert(`❌ Gagal menyimpan tugas ke database: ${result.error}`);
+        notifError('Gagal Simpan', 'Gagal menyimpan tugas ke database: ' + result.error);
         return;
       }
 
@@ -445,7 +447,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
         return [...filtered, newSub];
       });
 
-      alert(`✓ Tugas "${file.name}" Berhasil Diserahkan${storageUrl ? ' dan tersimpan di cloud!' : '.'}`);
+      notifSuccess('Tugas Diserahkan', 'Tugas ' + file.name + ' berhasil diserahkan' + (storageUrl ? ' dan tersimpan di cloud!' : '.'));
     };
     reader.readAsDataURL(file);
   };
@@ -455,7 +457,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
     const feedback = feedbackInput[submissionId] || "";
 
     if (grade === undefined || grade < 0 || grade > 100) {
-      alert("⚠️ Berikan nilai angka yang sah antara 0 - 100!");
+      notifError('Nilai Tidak Valid', 'Berikan nilai angka yang sah antara 0 - 100!');
       return;
     }
 
@@ -465,7 +467,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
 
     const result = await gradeSubmission(submissionId, Number(grade), feedback, gradedBy, mataPelajaran);
     if (!result.success) {
-      alert(`Gagal menyimpan nilai: ${result.error}`);
+      notifError('Gagal Simpan', 'Gagal menyimpan nilai: ' + result.error);
       return;
     }
 
@@ -484,11 +486,11 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
       return s;
     }));
 
-    alert("✓ Nilai & Feedback Berhasil Disimpan!");
+    notifSuccess('Nilai Disimpan', 'Nilai & Feedback berhasil disimpan!');
   };
 
   const deleteModule = async (courseId: string, moduleId: string) => {
-    if (confirm("Hapus materi belajar ini?")) {
+    notifConfirm('Hapus Materi?', 'Materi belajar ini akan dihapus permanen.', async () => {
       const updated = courses.map(c => {
         if (c.id === courseId) {
           return { ...c, modules: c.modules.filter(m => m.id !== moduleId) };
@@ -496,7 +498,8 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
         return c;
       });
       await saveCourses(updated);
-    }
+      notifSuccess('Materi Dihapus', 'Materi berhasil dihapus.');
+    }, 'Ya, Hapus', 'Batal');
   };
 
   const startQuiz = () => {
@@ -1621,6 +1624,7 @@ export default function ELearning({ initialSubTab = "siswa", settings }: ELearni
         </div>
       )}
 
+      <ModalNotif notif={notif} onClose={closeNotif} />
     </div>
   );
 }

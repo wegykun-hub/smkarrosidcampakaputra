@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Camera, MapPin, Clock, AlertTriangle, CheckCircle2, Trash2, 
   Compass, ShieldCheck, UserCheck, RefreshCw, AlertCircle, 
@@ -15,6 +15,7 @@ import {
 } from "../lib/services/attendanceService";
 import { fetchStudents, fetchTeachers } from "../lib/services/rosterService";
 import { uploadAttendancePhoto } from "../lib/services/storageService";
+import ModalNotif, { useNotif } from "./ModalNotif";
 
 // Official Coordinates of SMK Ar Rosyid Campaka Putra (Campaka, Cianjur)
 const SCHOOL_COORDINATES = {
@@ -32,6 +33,7 @@ interface AbsensiProps {
 }
 
 export default function Absensi({ initialRole, settings }: AbsensiProps) {
+  const { notif, closeNotif, notifConfirm } = useNotif();
   // Configurable attendance times from settings state
   const limitMasukHour = settings?.absensiMasukHour !== undefined ? parseInt(settings.absensiMasukHour, 10) : 7;
   const limitMasukMin = settings?.absensiMasukMinute !== undefined ? parseInt(settings.absensiMasukMinute, 10) : 30;
@@ -673,24 +675,27 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
       showToast("error", "❌ Akses Ditolak: Hanya Admin yang dapat menghapus catatan absensi.");
       return;
     }
-    if (!window.confirm(`Hapus log absensi milik ${personName}?`)) return;
-
-    setLogs(prev => prev.filter(l => l.id !== id));
-    setStudentLogs(prev => prev.filter(l => l.id !== id));
-    setTeacherLogs(prev => prev.filter(l => l.id !== id));
-
-    // Coba hapus dari kedua tabel (salah satu pasti ada)
-    const [r1, r2] = await Promise.all([
-      deleteStudentAttendance(id),
-      deleteTeacherAttendance(id),
-    ]);
-
-    if (!r1.success && !r2.success) {
-      showToast("error", "Gagal menghapus dari database.");
-      await loadAllData(); // reload
-    } else {
-      showToast("success", `Log absensi ${personName} berhasil dihapus.`);
-    }
+    notifConfirm(
+      'Hapus Log Absensi?',
+      `Log absensi milik ${personName} akan dihapus permanen.`,
+      async () => {
+        setLogs(prev => prev.filter(l => l.id !== id));
+        setStudentLogs(prev => prev.filter(l => l.id !== id));
+        setTeacherLogs(prev => prev.filter(l => l.id !== id));
+        const [r1, r2] = await Promise.all([
+          deleteStudentAttendance(id),
+          deleteTeacherAttendance(id),
+        ]);
+        if (!r1.success && !r2.success) {
+          showToast("error", "Gagal menghapus dari database.");
+          await loadAllData();
+        } else {
+          showToast("success", `Log absensi ${personName} berhasil dihapus.`);
+        }
+      },
+      'Ya, Hapus',
+      'Batal'
+    );
   };
 
   const clearAllLogs = async () => {
@@ -699,19 +704,24 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
       return;
     }
     const roleLabel = role === 'SISWA' ? 'siswa' : role === 'GURU' ? 'guru' : 'siswa DAN guru';
-    if (!window.confirm(`Hapus SEMUA catatan absensi ${roleLabel}? Tidak dapat dibatalkan!`)) return;
-
-    setLogs([]);
-    setStudentLogs([]);
-    setTeacherLogs([]);
-
-    if (role === 'SISWA' || role !== 'GURU') {
-      await clearAllStudentAttendance();
-    }
-    if (role === 'GURU' || role !== 'SISWA') {
-      await clearAllTeacherAttendance();
-    }
-    showToast("success", `Semua catatan absensi ${roleLabel} berhasil dihapus.`);
+    notifConfirm(
+      'Hapus Semua Absensi?',
+      `Semua catatan absensi ${roleLabel} akan dihapus permanen dan tidak dapat dikembalikan!`,
+      async () => {
+        setLogs([]);
+        setStudentLogs([]);
+        setTeacherLogs([]);
+        if (role === 'SISWA' || role !== 'GURU') {
+          await clearAllStudentAttendance();
+        }
+        if (role === 'GURU' || role !== 'SISWA') {
+          await clearAllTeacherAttendance();
+        }
+        showToast("success", `Semua catatan absensi ${roleLabel} berhasil dihapus.`);
+      },
+      'Ya, Hapus Semua',
+      'Batal'
+    );
   };
 
   // Mini summary calculations
@@ -1572,6 +1582,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
 
       </div>
 
+      <ModalNotif notif={notif} onClose={closeNotif} />
     </div>
   );
 }

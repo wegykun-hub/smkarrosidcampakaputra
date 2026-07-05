@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RegistrationData, AttendanceRecord, EnrolledStudent, NewsItem, GalleryItem, DashboardSlide, GeneralSettings, ELearningStudentAccount, ELearningTeacherAccount, AdminAccount } from "../types";
 import { TeacherProfile } from "./TentangSekolah";
+import ModalNotif, { useNotif } from "./ModalNotif";
 import * as XLSX from "xlsx";
 import { 
   Users, Trash2, Search, FileText, Download, CheckSquare, 
@@ -47,6 +48,8 @@ import {
 } from "../lib/services/elearningService";
 import { uploadWebsiteImage, uploadWebsiteImageFromDataUrl } from "../lib/services/storageService";
 
+
+
 interface AdminPanelProps {
   onClose: () => void;
   newsList: NewsItem[];
@@ -60,6 +63,9 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onClose, newsList = [], setNewsList, galleryList = [], setGalleryList, slidesList = [], setSlidesList, settings, setSettings }: AdminPanelProps) {
+  // Modal notifikasi profesional
+  const { notif, closeNotif, notifSuccess, notifError, notifWarning, notifConfirm } = useNotif();
+
   const resizeAndCompressImage = (file: File, maxWidth = 1200, maxHeight = 800, quality = 0.75): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -217,7 +223,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
   const handleSaveSlide = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!slideForm.title || !slideForm.image) {
-      alert("Judul slide dan URL Gambar wajib diisi!");
+      notifError("Form Tidak Lengkap", "Judul slide dan URL Gambar wajib diisi!");
       return;
     }
     let updated: DashboardSlide[];
@@ -232,7 +238,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       } : item);
       setSlidesList(updated);
       await replaceAllSlides(updated);
-      alert("Slide beranda berhasil diperbarui!");
+      notifSuccess("Slide Diperbarui", "Slide beranda berhasil diperbarui!");
       setIsEditingSlide(false);
       setSelectedSlideItem(null);
     } else {
@@ -247,27 +253,29 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       updated = [...slidesList, newSlide];
       setSlidesList(updated);
       await replaceAllSlides(updated);
-      alert("Slide baru berhasil ditambahkan!");
+      notifSuccess("Slide Ditambahkan", "Slide baru berhasil ditambahkan!");
       setIsAddingSlide(false);
     }
   };
 
   const handleDeleteSlide = async (id: string) => {
     if (slidesList.length <= 1) {
-      alert("Minimal 1 slide harus dipertahankan!");
+      notifError("Tidak Bisa Dihapus", "Minimal 1 slide harus dipertahankan!");
       return;
     }
-    if (!confirm("Hapus slide ini?")) return;
-    const updated = slidesList.filter(item => item.id !== id);
-    setSlidesList(updated);
-    await replaceAllSlides(updated);
-    if (selectedSlideItem?.id === id) { setSelectedSlideItem(null); setIsEditingSlide(false); }
+    notifConfirm("Hapus Slide?", "Slide ini akan dihapus secara permanen.", async () => {
+      const updated = slidesList.filter(item => item.id !== id);
+      setSlidesList(updated);
+      await replaceAllSlides(updated);
+      if (selectedSlideItem?.id === id) { setSelectedSlideItem(null); setIsEditingSlide(false); }
+      notifSuccess("Slide Dihapus", "Slide berhasil dihapus.");
+    });
   };
 
   const handleSaveNews = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsForm.title || !newsForm.content) {
-      alert("Judul dan Konten berita wajib diisi!");
+      notifError("Form Tidak Lengkap", "Judul dan Konten berita wajib diisi!");
       return;
     }
     const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -282,7 +290,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       };
       await upsertNews(updatedItem);
       setNewsList(prev => prev.map(n => n.id === updatedItem.id ? updatedItem : n));
-      alert("Berita berhasil diperbarui!");
+      notifSuccess("Berita Diperbarui", "Berita berhasil diperbarui!");
       setIsEditingNews(false); setSelectedNewsItem(null);
     } else {
       const newNews: NewsItem = {
@@ -296,22 +304,24 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       };
       await upsertNews(newNews);
       setNewsList(prev => [newNews, ...prev]);
-      alert("Berita baru berhasil ditambahkan!");
+      notifSuccess("Berita Ditambahkan", "Berita baru berhasil ditambahkan!");
       setIsAddingNews(false);
     }
   };
 
   const handleDeleteNews = async (id: string) => {
-    if (!confirm("Hapus berita ini?")) return;
-    await deleteNews(id);
-    setNewsList(prev => prev.filter(n => n.id !== id));
-    if (selectedNewsItem?.id === id) { setSelectedNewsItem(null); setIsEditingNews(false); }
+    notifConfirm("Hapus Berita?", "Berita ini akan dihapus secara permanen.", async () => {
+      await deleteNews(id);
+      setNewsList(prev => prev.filter(n => n.id !== id));
+      if (selectedNewsItem?.id === id) { setSelectedNewsItem(null); setIsEditingNews(false); }
+      notifSuccess("Berita Dihapus", "Berita berhasil dihapus.");
+    });
   };
 
   const handleSaveGallery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!galleryForm.title || !galleryForm.category) {
-      alert("Judul galeri dan Kategori wajib diisi!");
+      notifError("Form Tidak Lengkap", "Judul galeri dan Kategori wajib diisi!");
       return;
     }
     if (isEditingGallery && selectedGalleryItem) {
@@ -324,7 +334,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       };
       await upsertGallery(updatedItem);
       setGalleryList(prev => prev.map(g => g.id === updatedItem.id ? updatedItem : g));
-      alert("Foto galeri berhasil diperbarui!");
+      notifSuccess("Galeri Diperbarui", "Foto galeri berhasil diperbarui!");
       setIsEditingGallery(false); setSelectedGalleryItem(null);
     } else {
       const newGallery: GalleryItem = {
@@ -336,16 +346,18 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       };
       await upsertGallery(newGallery);
       setGalleryList(prev => [newGallery, ...prev]);
-      alert("Foto kegiatan baru berhasil ditambahkan!");
+      notifSuccess("Foto Ditambahkan", "Foto kegiatan baru berhasil ditambahkan!");
       setIsAddingGallery(false);
     }
   };
 
   const handleDeleteGallery = async (id: string) => {
-    if (!confirm("Hapus foto galeri ini?")) return;
-    await deleteGallery(id);
-    setGalleryList(prev => prev.filter(g => g.id !== id));
-    if (selectedGalleryItem?.id === id) { setSelectedGalleryItem(null); setIsEditingGallery(false); }
+    notifConfirm("Hapus Foto Galeri?", "Foto ini akan dihapus secara permanen.", async () => {
+      await deleteGallery(id);
+      setGalleryList(prev => prev.filter(g => g.id !== id));
+      if (selectedGalleryItem?.id === id) { setSelectedGalleryItem(null); setIsEditingGallery(false); }
+      notifSuccess("Foto Dihapus", "Foto galeri berhasil dihapus.");
+    });
   };
 
   // Teachers States
@@ -549,14 +561,20 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
   };
 
   const handleLogout = () => {
-    if (window.confirm("Apakah Anda yakin ingin keluar dari Mode Administrator ini?")) {
-      sessionStorage.removeItem("ar_rosyid_admin_session");
-      setIsAuthenticated(false);
-      setCurrentAdmin(null);
-      setUsername("");
-      setPassword("");
-      window.dispatchEvent(new Event("storage"));
-    }
+    notifConfirm(
+      "Keluar dari Admin Panel?",
+      "Sesi administrator akan diakhiri. Anda perlu login ulang untuk mengakses panel.",
+      () => {
+        sessionStorage.removeItem("ar_rosyid_admin_session");
+        setIsAuthenticated(false);
+        setCurrentAdmin(null);
+        setUsername("");
+        setPassword("");
+        window.dispatchEvent(new Event("storage"));
+      },
+      "Ya, Keluar",
+      "Batal"
+    );
   };
 
   // State for Switch Account Modal
@@ -581,7 +599,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       setShowSessionSwitchModal(false);
       setSwitchUsername("");
       setSwitchPassword("");
-      alert(`Berhasil beralih sesi admin ke: ${result.admin.name} (${result.admin.role === "SUPER_ADMIN" ? "Super Admin" : "Staf Admin"})`);
+      notifSuccess("Sesi Beralih", `Berhasil masuk sebagai ${result.admin.name} (${result.admin.role === "SUPER_ADMIN" ? "Super Admin" : "Staf Admin"})`);
       window.dispatchEvent(new Event("storage"));
     } else {
       setSwitchError(result.error ?? "Username atau password salah!");
@@ -615,7 +633,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       // Reload akun
       const updated = await fetchAdminAccounts();
       setAdminAccounts(updated);
-      alert(`Akun "${selectedAdminItem.username}" berhasil diperbarui!${adminForm.password ? ' Password baru telah disimpan.' : ''}`);
+      notifSuccess("Akun Diperbarui", `Akun "${selectedAdminItem.username}" berhasil diperbarui!${adminForm.password ? ' Password baru telah disimpan.' : ''}`);
     } else {
       // Buat akun baru — password wajib
       if (!adminForm.password || !adminForm.password.trim()) {
@@ -636,7 +654,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       }
       const updated = await fetchAdminAccounts();
       setAdminAccounts(updated);
-      alert(`Akun admin baru "${adminForm.username.trim().toLowerCase()}" berhasil dibuat!\n\nLogin dengan:\nUsername: ${adminForm.username.trim().toLowerCase()}\nPassword: ${adminForm.password.trim()}`);
+      notifSuccess("Akun Admin Dibuat", `Akun "${adminForm.username.trim().toLowerCase()}" berhasil dibuat!\nUsername: ${adminForm.username.trim().toLowerCase()}\nPassword: ${adminForm.password.trim()}`);
     }
 
     setAdminSaving(false);
@@ -648,22 +666,28 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
   const handleDeleteAdmin = async (usernameToDelete: string) => {
     if (currentAdmin && currentAdmin.username.toLowerCase() === usernameToDelete.toLowerCase()) {
-      alert("Anda tidak dapat menonaktifkan akun yang sedang Anda gunakan.");
+      notifError("Tidak Dapat Dihapus", "Anda tidak dapat menonaktifkan akun yang sedang Anda gunakan.");
       return;
     }
     const target = adminAccounts.find(a => a.username.toLowerCase() === usernameToDelete.toLowerCase());
     if (!target?.id) return;
 
-    if (window.confirm(`Nonaktifkan akun admin '${usernameToDelete}'?`)) {
-      await setAdminActiveStatus(target.id, false);
-      const updated = await fetchAdminAccounts();
-      setAdminAccounts(updated);
-      alert("Akun Admin berhasil dinonaktifkan!");
-    }
+    notifConfirm(
+      `Nonaktifkan Akun Admin?`,
+      `Akun admin '${usernameToDelete}' akan dinonaktifkan dan tidak bisa login.`,
+      async () => {
+        await setAdminActiveStatus(target.id!, false);
+        const updated = await fetchAdminAccounts();
+        setAdminAccounts(updated);
+        notifSuccess("Akun Dinonaktifkan", "Akun Admin berhasil dinonaktifkan!");
+      },
+      "Ya, Nonaktifkan",
+      "Batal"
+    );
   };
 
   const handleResetAdmins = () => {
-    alert("Reset admin tidak tersedia di mode Supabase. Gunakan Supabase Dashboard untuk manajemen akun secara langsung.");
+    notifWarning("Tidak Tersedia", "Reset admin tidak tersedia di mode Supabase. Gunakan Supabase Dashboard untuk manajemen akun secara langsung.");
   };
 
   // ==========================================
@@ -672,7 +696,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentForm.nisn || !studentForm.nama) {
-      alert("NISN dan Nama Lengkap wajib diisi!");
+      notifError("Form Tidak Lengkap", "NISN dan Nama Lengkap wajib diisi!");
       return;
     }
 
@@ -685,11 +709,11 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
         nisn: cleanNisn,
         nama: cleanNama,
       });
-      if (!result.success) { alert(`Gagal update: ${result.error}`); return; }
-      alert("Profil Siswa berhasil diperbarui!");
+      if (!result.success) { notifError("Gagal Update", `Gagal update: ${result.error}`); return; }
+      notifSuccess("Data Diperbarui", "Profil Siswa berhasil diperbarui!");
     } else {
       if (students.some(s => s.nisn === cleanNisn)) {
-        alert("Gagal: Siswa dengan NISN ini sudah terdaftar!");
+        notifError("NISN Sudah Ada", "Gagal: Siswa dengan NISN ini sudah terdaftar!");
         return;
       }
       const newStudent: EnrolledStudent = {
@@ -703,8 +727,8 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
         status: studentForm.status || 'AKTIF',
       };
       const result = await insertStudent(newStudent);
-      if (!result.success) { alert(`Gagal tambah siswa: ${result.error}`); return; }
-      alert("siswa Baru berhasil ditambahkan ke database SMK!");
+      if (!result.success) { notifError("Gagal Tambah", `Gagal tambah siswa: ${result.error}`); return; }
+      notifSuccess("Siswa Ditambahkan", "Siswa baru berhasil ditambahkan ke database SMK!");
     }
 
     const refreshed = await fetchStudents();
@@ -716,14 +740,21 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
   };
 
   const handleDeleteStudent = async (nisn: string) => {
-    if (window.confirm(`Hapus siswa dengan NISN ${nisn}?`)) {
-      const result = await deleteStudent(nisn);
-      if (!result.success) { alert(`Gagal hapus: ${result.error}`); return; }
-      const refreshed = await fetchStudents();
-      setStudents(refreshed);
-      window.dispatchEvent(new Event("storage"));
-      if (selectedStudentItem?.nisn === nisn) setSelectedStudentItem(null);
-    }
+    notifConfirm(
+      "Hapus Data Siswa?",
+      `Siswa dengan NISN ${nisn} akan dihapus permanen dari database.`,
+      async () => {
+        const result = await deleteStudent(nisn);
+        if (!result.success) { notifError("Gagal Hapus", `Gagal hapus: ${result.error}`); return; }
+        const refreshed = await fetchStudents();
+        setStudents(refreshed);
+        window.dispatchEvent(new Event("storage"));
+        if (selectedStudentItem?.nisn === nisn) setSelectedStudentItem(null);
+        notifSuccess("Siswa Dihapus", "Data siswa berhasil dihapus dari database.");
+      },
+      "Ya, Hapus",
+      "Batal"
+    );
   };
 
   // ==========================================
@@ -732,7 +763,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
   const handleSaveTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teacherForm.nama || !teacherForm.kodeGuru) {
-      alert("Nama Guru dan Kode Guru wajib diisi!");
+      notifError("Form Tidak Lengkap", "Nama Guru dan Kode Guru wajib diisi!");
       return;
     }
 
@@ -741,7 +772,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
     // Cek duplikat kode (hanya saat tambah baru)
     if (!isEditingTeacher && teachers.some(t => t.kodeGuru.toUpperCase() === cleanKode)) {
-      alert(`Gagal: Kode Guru "${cleanKode}" sudah terdaftar!`);
+      notifError("Kode Sudah Ada", `Gagal: Kode Guru "${cleanKode}" sudah terdaftar!`);
       return;
     }
 
@@ -762,9 +793,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
     // Simpan ke teacher_profiles
     const r1 = await upsertTeacherProfile(payload);
-    if (!r1.success) { alert(`Gagal simpan: ${r1.error}`); return; }
+    if (!r1.success) { notifError('Gagal Menyimpan', r1.error || 'Terjadi kesalahan.'); return; }
 
-    // Sync ke tabel teachers (absensi) — jika gagal insert coba update
+    // Sync ke tabel teachers (absensi)
     const teacherData = {
       kodeGuru: cleanKode,
       nip: payload.nip,
@@ -775,11 +806,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
     };
     const r2 = await insertTeacher(teacherData);
     if (!r2.success) {
-      // Sudah ada — update saja
       await updateTeacher(cleanKode, teacherData);
     }
 
-    // Reload dari teacher_profiles
     const refreshed = await fetchTeacherProfiles();
     setTeachers(refreshed);
     window.dispatchEvent(new Event("storage"));
@@ -791,44 +820,61 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
       foto: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
       pendidikan: "", mataPelajaran: "", email: "", kodeGuru: ""
     });
-    alert(isEditingTeacher ? "Profil Guru berhasil diubah!" : "Guru baru berhasil didaftarkan!");
+
+    if (isEditingTeacher) {
+      notifSuccess('Profil Guru Diperbarui', `Data ${cleanNama} berhasil disimpan ke database.`);
+    } else {
+      notifSuccess('Guru Baru Didaftarkan', `${cleanNama} berhasil ditambahkan ke database SMK.`);
+    }
   };
 
   const handleDeleteTeacher = async (kodeOrId: string) => {
     const target = teachers.find(t => t.kodeGuru === kodeOrId || t.id === kodeOrId);
-    if (!target) { alert("Data guru tidak ditemukan."); return; }
-    if (!window.confirm(`Hapus guru "${target.nama}"?`)) return;
+    if (!target) { notifError('Data Tidak Ditemukan', 'Guru tidak ditemukan di database.'); return; }
 
-    if (target.id) await deleteTeacherProfile(target.id);
-    await deleteTeacher(target.kodeGuru);
-
-    const refreshed = await fetchTeacherProfiles();
-    setTeachers(refreshed);
-    window.dispatchEvent(new Event("storage"));
-    if (selectedTeacherItem?.kodeGuru === target.kodeGuru) setSelectedTeacherItem(null);
-    alert("Guru berhasil dihapus!");
+    notifConfirm(
+      'Hapus Guru?',
+      `Apakah Anda yakin ingin menghapus "${target.nama}" dari database sekolah?\nTindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        if (target.id) await deleteTeacherProfile(target.id);
+        await deleteTeacher(target.kodeGuru);
+        const refreshed = await fetchTeacherProfiles();
+        setTeachers(refreshed);
+        window.dispatchEvent(new Event("storage"));
+        if (selectedTeacherItem?.kodeGuru === target.kodeGuru) setSelectedTeacherItem(null);
+        notifSuccess('Guru Dihapus', `Data ${target.nama} berhasil dihapus dari database.`);
+      },
+      'Ya, Hapus',
+      'Batal'
+    );
   };
 
   // ==========================================
   // ABSENSI EXPORTS & ACTIONS (via Supabase)
   // ==========================================
   const handleDeleteLog = async (id: string) => {
-    if (window.confirm("Hapus catatan kehadiran ini?")) {
-      setAttendanceLogs(prev => prev.filter(l => l.id !== id));
-      setStudentAttLogs(prev => prev.filter(l => l.id !== id));
-      setTeacherAttLogs(prev => prev.filter(l => l.id !== id));
-      // Hapus dari kedua tabel (salah satu pasti berhasil)
-      await Promise.all([
-        deleteStudentAttendance(id),
-        deleteTeacherAttendance(id),
-      ]);
-      window.dispatchEvent(new Event("storage"));
-    }
+    notifConfirm(
+      "Hapus Catatan Kehadiran?",
+      "Catatan absensi ini akan dihapus permanen dari database.",
+      async () => {
+        setAttendanceLogs(prev => prev.filter(l => l.id !== id));
+        setStudentAttLogs(prev => prev.filter(l => l.id !== id));
+        setTeacherAttLogs(prev => prev.filter(l => l.id !== id));
+        await Promise.all([
+          deleteStudentAttendance(id),
+          deleteTeacherAttendance(id),
+        ]);
+        window.dispatchEvent(new Event("storage"));
+        notifSuccess("Catatan Dihapus", "Catatan kehadiran berhasil dihapus.");
+      },
+      "Ya, Hapus",
+      "Batal"
+    );
   };
 
   const handleDownloadAttendanceCsv = () => {
     if (filteredLogs.length === 0) {
-      alert("Tidak ada data presensi untuk diekspor!");
+      notifWarning("Tidak Ada Data", "Tidak ada data presensi untuk diekspor!");
       return;
     }
 
@@ -899,7 +945,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
   const handlePrintReport = () => {
     if (filteredLogs.length === 0) {
-      alert("Tidak ada data presensi untuk dicetak!");
+      notifWarning("Tidak Ada Data", "Tidak ada data presensi untuk dicetak!");
       return;
     }
 
@@ -1058,25 +1104,28 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
   };
 
   const handleDeleteRegistration = async (id: string) => {
-    if (window.confirm(`Hapus data pendaftaran ${id}? Tindakan ini permanen!`)) {
-      const result = await deleteRegistration(id);
-      if (!result.success) { alert(`Gagal hapus: ${result.error}`); return; }
-
-      setRegistrations(prev => prev.filter(r => r.id !== id));
-      const updatedMap = { ...statusMap };
-      delete updatedMap[id];
-      setStatusMap(updatedMap);
-      localStorage.setItem("ar_rosyid_status_map", JSON.stringify(updatedMap));
-
-      if (selectedStudent?.id === id) {
-        setSelectedStudent(null);
-      }
-    }
+    notifConfirm(
+      "Hapus Data Pendaftaran?",
+      `Data pendaftaran ${id} akan dihapus permanen dan tidak dapat dikembalikan.`,
+      async () => {
+        const result = await deleteRegistration(id);
+        if (!result.success) { notifError("Gagal Hapus", `Gagal hapus: ${result.error}`); return; }
+        setRegistrations(prev => prev.filter(r => r.id !== id));
+        const updatedMap = { ...statusMap };
+        delete updatedMap[id];
+        setStatusMap(updatedMap);
+        localStorage.setItem("ar_rosyid_status_map", JSON.stringify(updatedMap));
+        if (selectedStudent?.id === id) setSelectedStudent(null);
+        notifSuccess("Data Dihapus", "Data pendaftaran berhasil dihapus.");
+      },
+      "Ya, Hapus",
+      "Batal"
+    );
   };
 
   const handleDownloadCsv = () => {
     if (registrations.length === 0) {
-      alert("Belum ada data pendaftar untuk diekspor!");
+      notifWarning("Tidak Ada Data", "Belum ada data pendaftar untuk diekspor!");
       return;
     }
 
@@ -1692,14 +1741,19 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                   <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                     <button
                       onClick={async () => {
-                        if (confirm("⚠️ Hapus SEMUA data pendaftaran SPMB? Tidak dapat dibatalkan!")) {
-                          // Hapus satu per satu dari Supabase
-                          await Promise.all(registrations.map(r => deleteRegistration(r.id)));
-                          setRegistrations([]);
-                          localStorage.setItem("ar_rosyid_status_map", JSON.stringify({}));
-                          setStatusMap({});
-                          alert("✓ Semua data pendaftar SPMB berhasil di-reset!");
-                        }
+                        notifConfirm(
+                          "Reset Semua Data SPMB?",
+                          "⚠️ Semua data pendaftaran SPMB akan dihapus permanen. Tindakan ini tidak dapat dibatalkan!",
+                          async () => {
+                            await Promise.all(registrations.map(r => deleteRegistration(r.id)));
+                            setRegistrations([]);
+                            localStorage.setItem("ar_rosyid_status_map", JSON.stringify({}));
+                            setStatusMap({});
+                            notifSuccess("Data Di-reset", "Semua data pendaftar SPMB berhasil di-reset!");
+                          },
+                          "Ya, Hapus Semua",
+                          "Batal"
+                        );
                       }}
                       className="flex-1 sm:flex-initial bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm border border-rose-500"
                     >
@@ -1792,7 +1846,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                             }
                           ];
                           setRegistrations(demoData);
-                          alert("Berhasil mengisi demo pendaftar baru.");
+                          notifSuccess("Demo Dimuat", "Berhasil mengisi demo pendaftar baru.");
                         }
                       }}
                       className="bg-slate-900 text-amber-400 text-[11px] font-black tracking-wider px-3 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
@@ -2059,12 +2113,18 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                   <div className="flex gap-2 w-full xl:w-auto flex-wrap">
                     <button
                       onClick={async () => {
-                        if (confirm("⚠️ Hapus SEMUA data siswa aktif? Tidak dapat dibatalkan!")) {
-                          await Promise.all(students.map(s => deleteStudent(s.nisn)));
-                          setStudents([]);
-                          window.dispatchEvent(new Event("storage"));
-                          alert("✓ Semua data Siswa Aktif berhasil di-reset!");
-                        }
+                        notifConfirm(
+                          "Reset Semua Data Siswa?",
+                          "⚠️ Semua data siswa aktif akan dihapus permanen. Tindakan ini tidak dapat dibatalkan!",
+                          async () => {
+                            await Promise.all(students.map(s => deleteStudent(s.nisn)));
+                            setStudents([]);
+                            window.dispatchEvent(new Event("storage"));
+                            notifSuccess("Data Di-reset", "Semua data Siswa Aktif berhasil di-reset!");
+                          },
+                          "Ya, Hapus Semua",
+                          "Batal"
+                        );
                       }}
                       className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer border border-rose-500 shadow-sm"
                     >
@@ -2875,16 +2935,22 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                     <div className="flex gap-1.5 justify-end shrink-0 flex-wrap">
                       <button
                         onClick={async () => {
-                          if (confirm("⚠️ Hapus SEMUA data rekap absensi? Tidak dapat dibatalkan!")) {
-                            await Promise.all([
-                              clearAllStudentAttendance(),
-                              clearAllTeacherAttendance(),
-                            ]);
-                            setAttendanceLogs([]);
-                            setStudentAttLogs([]);
-                            setTeacherAttLogs([]);
-                            alert("✓ Semua catatan absensi berhasil di-reset!");
-                          }
+                          notifConfirm(
+                            "Reset Semua Catatan Absensi?",
+                            "⚠️ Semua data rekap absensi siswa dan guru akan dihapus permanen. Tindakan ini tidak dapat dibatalkan!",
+                            async () => {
+                              await Promise.all([
+                                clearAllStudentAttendance(),
+                                clearAllTeacherAttendance(),
+                              ]);
+                              setAttendanceLogs([]);
+                              setStudentAttLogs([]);
+                              setTeacherAttLogs([]);
+                              notifSuccess("Absensi Di-reset", "Semua catatan absensi berhasil di-reset!");
+                            },
+                            "Ya, Hapus Semua",
+                            "Batal"
+                          );
                         }}
                         className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black tracking-wider uppercase px-3 py-2 rounded-xl border border-rose-500 transition cursor-pointer flex items-center justify-center gap-1 shadow-sm"
                         title="Hapus / Reset semua riwayat absensi"
@@ -3279,7 +3345,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                       onSubmit={async (e) => {
                         e.preventDefault();
                         if (!fasilitasForm.name || !fasilitasForm.image) {
-                          alert("Nama dan Gambar wajib diisi!");
+                          notifError("Form Tidak Lengkap", "Nama dan Gambar wajib diisi!");
                           return;
                         }
                         const item: FasilitasItem = {
@@ -3289,16 +3355,16 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                           image: fasilitasForm.image!,
                           sortOrder: fasilitasForm.sortOrder ?? fasilitasList.length,
                         };
-                        const r = await upsertFasilitas(item);
-                        if (!r.success) { alert(`Gagal: ${r.error}`); return; }
+                         const r = await upsertFasilitas(item);
+                         if (!r.success) { notifError("Gagal Simpan", "Gagal: " + r.error); return; }
                         const refreshed = await fetchFasilitas();
                         setFasilitasList(refreshed);
                         setIsAddingFasilitas(false);
                         setIsEditingFasilitas(false);
                         setSelectedFasilitas(null);
                         setFasilitasForm({ id:'', name:'', desc:'', image:'', sortOrder:0 });
-                        alert(isEditingFasilitas ? "Fasilitas berhasil diperbarui!" : "Fasilitas baru berhasil ditambahkan!");
-                      }}
+                         notifSuccess(isEditingFasilitas ? "Fasilitas Diperbarui" : "Fasilitas Ditambahkan", isEditingFasilitas ? "Fasilitas berhasil diperbarui!" : "Fasilitas baru berhasil ditambahkan!");
+                       }}
                       className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm space-y-4"
                     >
                       <h4 className="font-black text-sm text-slate-900 border-b pb-2">
@@ -3414,13 +3480,12 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                                 <Edit size={11} /> Edit
                               </button>
                               <button
-                                onClick={async () => {
-                                  if (!confirm(`Hapus fasilitas "${fas.name}"?`)) return;
+                                onClick={() => notifConfirm("Hapus Fasilitas?", `Hapus fasilitas "${fas.name}"?`, async () => {
                                   await deleteFasilitas(fas.id);
                                   const refreshed = await fetchFasilitas();
                                   setFasilitasList(refreshed);
-                                  alert("Fasilitas berhasil dihapus!");
-                                }}
+                                  notifSuccess("Fasilitas Dihapus", "Fasilitas berhasil dihapus!");
+                                })}
                                 className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[10px] rounded-lg transition flex items-center gap-1 cursor-pointer"
                               >
                                 <Trash2 size={11} />
@@ -3471,7 +3536,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                       onSubmit={async (e) => {
                         e.preventDefault();
                         if (!courseForm.title || !courseForm.code || !courseForm.teacher) {
-                          alert("Nama, Kode, dan Guru Pengampu wajib diisi!");
+                          notifError("Form Tidak Lengkap", "Nama, Kode, dan Guru Pengampu wajib diisi!");
                           return;
                         }
                         const item: ELCourse = {
@@ -3485,14 +3550,14 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                           assignments: courseForm.assignments || [],
                         };
                         const r = await upsertCourse(item);
-                        if (!r.success) { alert(`Gagal: ${r.error}`); return; }
+                        if (!r.success) { notifError("Gagal Simpan", "Gagal: " + r.error); return; }
                         const refreshed = await fetchCourses();
                         setCoursesList(refreshed as ELCourse[]);
                         setIsAddingCourse(false);
                         setIsEditingCourse(false);
                         setSelectedCourse(null);
                         setCourseForm({ id:'', code:'', title:'', major:'TKJ', grade:'XI', teacher:'', modules:[], assignments:[] });
-                        alert(isEditingCourse ? "Mata pelajaran berhasil diperbarui!" : "Mata pelajaran baru berhasil ditambahkan!");
+                        notifSuccess(isEditingCourse ? "Mata Pelajaran Diperbarui" : "Mata Pelajaran Ditambahkan", isEditingCourse ? "Mata pelajaran berhasil diperbarui!" : "Mata pelajaran baru berhasil ditambahkan!");
                       }}
                       className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm space-y-4"
                     >
@@ -4410,9 +4475,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         setSettings(settings);
                         // Update localStorage cache
                         localStorage.setItem('ar_rosyid_general_settings_v1', JSON.stringify(settings));
-                        alert("✓ Pengaturan Berhasil Disimpan ke Supabase!");
+                        notifSuccess("Pengaturan Disimpan", "Semua pengaturan berhasil disimpan ke Supabase!");
                       } else {
-                        alert(`❌ Gagal menyimpan: ${result.error}`);
+                        notifError("Gagal Simpan", "Gagal menyimpan pengaturan: " + result.error);
                       }
                     }}
                     className="px-5 py-2.5 bg-gradient-to-r from-yellow-200 to-stone-100 hover:from-yellow-300 hover:to-stone-200 text-slate-950 font-black text-xs uppercase rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-yellow-300 shadow scale-102"
@@ -4958,9 +5023,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                             <button
                               type="button"
                               onClick={() => {
-                                if (confirm("Apakah Anda yakin ingin menghapus custom logo dan menggunakan logo bawaan?")) {
+                                notifConfirm("Hapus Logo Custom?", "Logo custom akan dihapus dan menggunakan logo bawaan.", () => {
                                   setSettings({ ...settings, schoolLogo: "" });
-                                }
+                                })
                               }}
                               className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[8px] uppercase rounded border border-red-200 transition flex items-center gap-1 cursor-pointer"
                             >
@@ -5006,9 +5071,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                       if (result.success) {
                         setSettings(settings);
                         localStorage.setItem('ar_rosyid_general_settings_v1', JSON.stringify(settings));
-                        alert("✓ Semua Pengaturan Berhasil Disimpan ke Supabase!");
+                        notifSuccess("Pengaturan Disimpan", "Semua pengaturan berhasil disimpan ke Supabase!");
                       } else {
-                        alert(`❌ Gagal menyimpan: ${result.error}`);
+                        notifError("Gagal Simpan", "Gagal menyimpan pengaturan: " + result.error);
                       }
                     }}
                     className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase rounded-xl transition flex items-center gap-2 cursor-pointer shadow-lg tracking-wider"
@@ -5092,7 +5157,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         onSubmit={async (e) => {
                           e.preventDefault();
                           if (!eleSiswaForm.nisn || !eleSiswaForm.name) {
-                            alert("NISN dan Nama wajib diisi!");
+                            notifError("Form Tidak Lengkap", "NISN dan Nama wajib diisi!");
                             return;
                           }
                           let updated: ELearningStudentAccount[];
@@ -5105,7 +5170,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               jurusan: eleSiswaForm.jurusan || "",
                               status: eleSiswaForm.status as any
                             } : item);
-                            alert("Akun siswa berhasil diperbarui!");
+                            notifSuccess("Akun Diperbarui", "Akun siswa berhasil diperbarui!");
                           } else {
                             const newAcc: ELearningStudentAccount = {
                               id: `e-std-${Date.now()}`,
@@ -5116,7 +5181,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               status: (eleSiswaForm.status || 'AKTIF') as any
                             };
                             updated = [...eleSiswa, newAcc];
-                            alert("Akun siswa baru berhasil ditambahkan!");
+                            notifSuccess("Akun Ditambahkan", "Akun siswa baru berhasil ditambahkan!");
                           }
                           setEleSiswa(updated);
                           // Simpan ke Supabase
@@ -5279,15 +5344,14 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                                       Edit
                                     </button>
                                     <button
-                                      onClick={async () => {
-                                        if (confirm(`Hapus akun E-Learning siswa ${item.name}?`)) {
+                                      onClick={() => {
+                                        notifConfirm('Hapus Akun?', 'Hapus akun E-Learning siswa ' + item.name + '?', async () => {
                                           const updated = eleSiswa.filter(e => e.id !== item.id);
                                           setEleSiswa(updated);
                                           await deleteELStudent(item.id);
-                                          alert("Akun berhasil dihapus!");
-                                        }
+                                          notifSuccess('Akun Dihapus', 'Akun berhasil dihapus!');
+                                        });
                                       }}
-                                      className="p-1 text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                                       title="Hapus"
                                     >
                                       <Trash2 size={14} />
@@ -5338,7 +5402,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         onSubmit={async (e) => {
                           e.preventDefault();
                           if (!eleGuruForm.nip || !eleGuruForm.name || !eleGuruForm.pin) {
-                            alert("NIP, Nama, dan PIN Keamanan wajib diisi!");
+                            notifError("Form Tidak Lengkap", "NIP, Nama, dan PIN Keamanan wajib diisi!");
                             return;
                           }
                           let updated: ELearningTeacherAccount[];
@@ -5352,9 +5416,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               status: eleGuruForm.status as any
                             };
                             const result = await upsertELTeacher(updatedItem, eleGuruForm.pin || "");
-                            if (!result.success) { alert(`Gagal: ${result.error}`); return; }
+                            if (!result.success) { notifError("Gagal Update", "Gagal: " + result.error); return; }
                             updated = eleGuru.map(item => item.id === selectedEleGuru.id ? updatedItem : item);
-                            alert("Akun Guru berhasil diperbarui!");
+                            notifSuccess("Akun Diperbarui", "Akun Guru berhasil diperbarui!");
                           } else {
                             const newAcc: ELearningTeacherAccount = {
                               id: `e-tch-${Date.now()}`,
@@ -5365,9 +5429,9 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               status: (eleGuruForm.status || 'AKTIF') as any
                             };
                             const result = await upsertELTeacher(newAcc, eleGuruForm.pin || "");
-                            if (!result.success) { alert(`Gagal: ${result.error}`); return; }
+                            if (!result.success) { notifError("Gagal Tambah", "Gagal: " + result.error); return; }
                             updated = [...eleGuru, newAcc];
-                            alert("Akun Guru baru berhasil ditambahkan!");
+                            notifSuccess("Akun Ditambahkan", "Akun Guru baru berhasil ditambahkan!");
                           }
                           setEleGuru(updated);
                           setIsAddingEleGuru(false);
@@ -5533,15 +5597,14 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                                       Edit
                                     </button>
                                     <button
-                                      onClick={async () => {
-                                        if (confirm(`Hapus akun E-Learning guru ${item.name}?`)) {
+                                      onClick={() => {
+                                        notifConfirm('Hapus Akun?', 'Hapus akun E-Learning guru ' + item.name + '?', async () => {
                                           const result = await deleteELTeacher(item.id);
-                                          if (!result.success) { alert(`Gagal: ${result.error}`); return; }
+                                          if (!result.success) { notifError('Gagal Hapus', 'Gagal: ' + result.error); return; }
                                           setEleGuru(prev => prev.filter(e => e.id !== item.id));
-                                          alert("Akun berhasil dihapus!");
-                                        }
+                                          notifSuccess('Akun Dihapus', 'Akun berhasil dihapus!');
+                                        });
                                       }}
-                                      className="p-1 text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                                       title="Hapus"
                                     >
                                       <Trash2 size={14} />
@@ -5908,6 +5971,8 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
         </div>
       )}
 
+      {/* Modal Notifikasi Profesional */}
+      <ModalNotif notif={notif} onClose={closeNotif} />
       </div>
     </div>
   );

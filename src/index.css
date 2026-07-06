@@ -7,6 +7,11 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* ── Full viewport mobile (dvh) ─────────────────────────── */
+.min-h-dvh {
+  min-height: 100dvh;
+}
+
 /* ── Prevent horizontal swipe navigation ─────────────────── */
 html, body {
   overscroll-behavior-x: none;

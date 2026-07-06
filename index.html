@@ -29,16 +29,27 @@
 
       body {
         overflow-x: hidden;
-        min-height: 100vh;
+        min-height: 100dvh;
         -webkit-font-smoothing: antialiased;
       }
 
       #root {
         overflow-x: hidden;
-        min-height: 100vh;
+        min-height: 100dvh;
         background-color: #fffef0;
-        /* Ruang untuk bottom nav bar */
-        padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+      }
+
+      /* Nav bar background putih sampai ujung bawah layar */
+      .bottom-nav-bg {
+        background: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        /* Tinggi = tombol nav + safe area */
+        height: calc(52px + env(safe-area-inset-bottom, 0px));
+        z-index: 49;
       }
 
       * {

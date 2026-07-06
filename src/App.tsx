@@ -67,7 +67,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fffef0] flex flex-col justify-between font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen min-h-dvh bg-[#fffef0] flex flex-col justify-between font-sans selection:bg-orange-500 selection:text-white">
       
       {/* 1. BRAND NAVIGATION HEADER */}
       <Navigation 

@@ -75,7 +75,7 @@ export default function BottomNavBar({ currentTab, setTab }: BottomNavBarProps) 
           ref={popupRef}
           className="lg:hidden fixed z-50 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden"
           style={{
-            bottom: "calc(64px + env(safe-area-inset-bottom, 0px))",
+            bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
             left: "50%",
             transform: "translateX(-50%)",
             width: "min(280px, 85vw)",
@@ -130,7 +130,7 @@ export default function BottomNavBar({ currentTab, setTab }: BottomNavBarProps) 
           ref={popupRef}
           className="lg:hidden fixed z-50 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden"
           style={{
-            bottom: "calc(64px + env(safe-area-inset-bottom, 0px))",
+            bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
             left: "50%",
             transform: "translateX(-50%)",
             width: "min(280px, 85vw)",
@@ -179,11 +179,16 @@ export default function BottomNavBar({ currentTab, setTab }: BottomNavBarProps) 
         </div>
       )}
 
-      {/* Bottom Nav Bar */}
+      {/* Background putih yang menutupi area bawah layar penuh (safe area) */}
+      <div className="bottom-nav-bg lg:hidden" />
+
+      {/* Bottom Nav Bar — di atas background, z-50 */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_16px_rgba(0,0,0,0.08)] flex items-stretch"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="lg:hidden fixed left-0 right-0 z-50 bg-transparent"
+        style={{ bottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
+        {/* Row tombol navigasi */}
+        <div className="flex items-stretch bg-white border-t border-slate-200 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.key;
@@ -194,16 +199,13 @@ export default function BottomNavBar({ currentTab, setTab }: BottomNavBarProps) 
             <button
               key={item.key}
               onClick={() => handleNavClick(item.key, item.sub)}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 px-1 transition-all duration-150 cursor-pointer relative min-h-[56px] ${
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-3 px-1 transition-all duration-150 cursor-pointer relative min-h-[52px] ${
                 isActive || isPopupOpen ? "text-orange-600" : "text-slate-400"
               }`}
             >
-              {/* Active top indicator */}
               {(isActive || isPopupOpen) && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-orange-500" />
               )}
-
-              {/* Icon dengan badge chevron untuk item yang punya popup */}
               <div className="relative">
                 <Icon
                   size={21}
@@ -211,24 +213,20 @@ export default function BottomNavBar({ currentTab, setTab }: BottomNavBarProps) 
                   className={`transition-transform duration-150 ${isActive || isPopupOpen ? "scale-110" : ""}`}
                 />
                 {hasPopup && (
-                  <span
-                    className={`absolute -top-1 -right-2 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center transition-colors ${
-                      isPopupOpen ? "bg-orange-500" : "bg-slate-300"
-                    }`}
-                  >
+                  <span className={`absolute -top-1 -right-2 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center transition-colors ${isPopupOpen ? "bg-orange-500" : "bg-slate-300"}`}>
                     <svg width="5" height="4" viewBox="0 0 5 4" fill="none">
                       <path d="M1 1.5L2.5 3L4 1.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </span>
                 )}
               </div>
-
               <span className={`text-[9px] font-bold tracking-tight leading-none ${isActive || isPopupOpen ? "text-orange-600" : "text-slate-400"}`}>
                 {item.label}
               </span>
             </button>
           );
         })}
+        </div>
       </nav>
 
       {/* Animasi popup-up */}
@@ -241,3 +239,4 @@ export default function BottomNavBar({ currentTab, setTab }: BottomNavBarProps) 
     </>
   );
 }
+

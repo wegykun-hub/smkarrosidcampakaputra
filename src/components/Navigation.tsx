@@ -233,19 +233,11 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
             ))}
           </nav>
 
-          {/* Mobile right side: Admin + Hamburger */}
-          <div className="lg:hidden flex items-center gap-2">
-            {/* Admin button compact on mobile */}
-            <button
-              onClick={onOpenAdmin}
-              className="sm:hidden flex items-center gap-1 bg-gradient-to-r from-yellow-200 to-stone-100 border border-yellow-300 text-slate-900 px-2.5 py-1.5 rounded-lg text-[10px] font-black cursor-pointer shadow"
-            >
-              <UserCheck size={12} className="text-amber-700" />
-              ADMIN
-            </button>
+          {/* Mobile right side: Hamburger only */}
+          <div className="lg:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg text-slate-800 hover:bg-yellow-250 focus:outline-none focus:ring-2 focus:ring-yellow-300 transition-colors"
+              className="p-2 rounded-lg text-slate-800 hover:bg-yellow-100 focus:outline-none transition-colors"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -271,6 +263,21 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
       {isOpen && (
         <div className="lg:hidden bg-white text-slate-900 shadow-2xl border-b border-amber-300 overflow-y-auto max-h-[75vh] transition duration-300 animate-in slide-in-from-top-2">
           <div className="p-4 space-y-2">
+
+            {/* Tombol Admin Panel — paling atas */}
+            <button
+              onClick={() => { onOpenAdmin(); setIsOpen(false); }}
+              className="w-full text-left px-4 py-3.5 rounded-xl text-xs font-black tracking-wider transition-all duration-200 flex items-center gap-2.5 bg-slate-900 text-amber-400 border border-slate-800 shadow-sm"
+            >
+              <UserCheck size={15} className="text-amber-400 shrink-0" />
+              <div>
+                <span className="block">ADMIN PANEL</span>
+                <span className="text-[9px] text-slate-400 font-semibold tracking-normal normal-case">Kelola data sekolah & pengguna</span>
+              </div>
+            </button>
+
+            <div className="border-t border-slate-100 my-1" />
+
             <button
               onClick={() => handleMenuClick("home")}
               className={`w-full text-left px-4 py-3 rounded-xl text-xs font-black tracking-wider transition-all duration-200 flex items-center gap-2.5 ${

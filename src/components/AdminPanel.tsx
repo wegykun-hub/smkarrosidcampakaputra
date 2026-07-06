@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import { RegistrationData, AttendanceRecord, EnrolledStudent, NewsItem, GalleryItem, DashboardSlide, GeneralSettings, ELearningStudentAccount, ELearningTeacherAccount, AdminAccount } from "../types";
 import { TeacherProfile } from "./TentangSekolah";
 import ModalNotif, { useNotif } from "./ModalNotif";
@@ -2141,7 +2141,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                           nisn: "", nama: "", kelas: "X", jurusan: "TKJ", jenisKelamin: "L", alamat: "", telepon: "", status: "AKTIF"
                         });
                       }}
-                      className="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer border border-yellow-300 shadow-sm"
+                      className="bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 font-extrabold text-xs px-4 py-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer border border-yellow-300 shadow-sm min-h-[44px]"
                     >
                       <Plus size={15} />
                       TAMBAH SISWA BARU
@@ -2273,7 +2273,84 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                     )}
                   </div>
 
-                  {/* Right Form or Details of Student */}
+                  {/* Mobile: Form sebagai modal bottom sheet */}
+                  {(isAddingStudent || isEditingStudent) && (
+                    <div className="md:hidden fixed inset-0 z-[200] flex flex-col justify-end">
+                      <div className="absolute inset-0 bg-black/50" onClick={() => { setIsAddingStudent(false); setIsEditingStudent(false); setSelectedStudentItem(null); }} />
+                      <div className="relative bg-white rounded-t-3xl shadow-2xl max-h-[88vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 pt-4 pb-3 flex justify-between items-center z-10">
+                          <h4 className="font-extrabold text-slate-900 text-sm uppercase tracking-wide flex items-center gap-1.5">
+                            <GraduationCap size={15} className="text-orange-500" />
+                            {isAddingStudent ? "Tambah Siswa Baru" : `Edit: ${selectedStudentItem?.nama}`}
+                          </h4>
+                          <button onClick={() => { setIsAddingStudent(false); setIsEditingStudent(false); setSelectedStudentItem(null); }} className="p-1.5 text-slate-400 cursor-pointer">
+                            <X size={18} />
+                          </button>
+                        </div>
+                        <div className="p-5">
+                          <form onSubmit={handleSaveStudent} className="space-y-4 text-xs">
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">NISN Siswa (10 Digit)</label>
+                              <input type="text" maxLength={10} required disabled={isEditingStudent} value={studentForm.nisn} onChange={(e) => setStudentForm({ ...studentForm, nisn: e.target.value })} placeholder="Contoh: 0098765432" className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono font-bold text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Nama Lengkap Siswa</label>
+                              <input type="text" required value={studentForm.nama} onChange={(e) => setStudentForm({ ...studentForm, nama: e.target.value })} placeholder="Nama lengkap siswa..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-bold uppercase text-base" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Jenis Kelamin</label>
+                                <select value={studentForm.jenisKelamin} onChange={(e) => setStudentForm({ ...studentForm, jenisKelamin: e.target.value as 'L' | 'P' })} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 bg-white text-base">
+                                  <option value="L">Laki-laki</option>
+                                  <option value="P">Perempuan</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Status</label>
+                                <select value={studentForm.status} onChange={(e) => setStudentForm({ ...studentForm, status: e.target.value as 'AKTIF' | 'ALUMNI' | 'MUTASI' })} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 bg-white text-base">
+                                  <option value="AKTIF">AKTIF</option>
+                                  <option value="MUTASI">MUTASI</option>
+                                  <option value="ALUMNI">ALUMNI</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kelas</label>
+                                <select value={studentForm.kelas} onChange={(e) => setStudentForm({ ...studentForm, kelas: e.target.value as 'X' | 'XI' | 'XII' })} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 bg-white font-bold text-base">
+                                  <option value="X">Kelas X</option>
+                                  <option value="XI">Kelas XI</option>
+                                  <option value="XII">Kelas XII</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Jurusan</label>
+                                <select value={studentForm.jurusan} onChange={(e) => setStudentForm({ ...studentForm, jurusan: e.target.value as 'TKJ' | 'PEMASARAN' | 'UMUM' })} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 bg-white font-bold text-base">
+                                  <option value="TKJ">TKJ</option>
+                                  <option value="PEMASARAN">PEMASARAN</option>
+                                  <option value="UMUM">UMUM</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">No. HP / WA (Opsional)</label>
+                              <input type="text" value={studentForm.telepon} onChange={(e) => setStudentForm({ ...studentForm, telepon: e.target.value })} placeholder="0857XXXXXXXX" className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Alamat (Opsional)</label>
+                              <textarea value={studentForm.alamat} onChange={(e) => setStudentForm({ ...studentForm, alamat: e.target.value })} placeholder="Alamat tinggal..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 h-20 resize-none text-base" />
+                            </div>
+                            <div className="flex gap-2 pt-2 pb-4">
+                              <button type="submit" className="flex-1 bg-slate-900 text-amber-400 font-black uppercase py-3.5 rounded-xl cursor-pointer text-xs tracking-widest">SIMPAN DATA</button>
+                              <button type="button" onClick={() => { setIsAddingStudent(false); setIsEditingStudent(false); setSelectedStudentItem(null); }} className="px-5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs">BATAL</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Right Form or Details of Student — Desktop only */}
                   <div className="hidden md:block md:w-1/2 p-6 overflow-y-auto bg-slate-50">
                     {isAddingStudent || isEditingStudent ? (
                       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
@@ -2484,7 +2561,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         id: "", nama: "", jabatan: "", kategori: "UMUM", foto: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400", pendidikan: "", mataPelajaran: "", email: "", kodeGuru: ""
                       });
                     }}
-                    className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-slate-950 font-extrabold text-xs px-4 py-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
                   >
                     <Plus size={15} />
                     DAFTARKAN GURU BARU
@@ -2573,6 +2650,69 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         ))
                     )}
                   </div>
+
+                  {/* Mobile: Form guru sebagai modal bottom sheet */}
+                  {(isAddingTeacher || isEditingTeacher) && (
+                    <div className="md:hidden fixed inset-0 z-[200] flex flex-col justify-end">
+                      <div className="absolute inset-0 bg-black/50" onClick={() => { setIsAddingTeacher(false); setIsEditingTeacher(false); setSelectedTeacherItem(null); }} />
+                      <div className="relative bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 pt-4 pb-3 flex justify-between items-center z-10">
+                          <h4 className="font-extrabold text-slate-900 text-sm uppercase tracking-wide flex items-center gap-1.5">
+                            <Users size={15} className="text-orange-500" />
+                            {isAddingTeacher ? "Daftarkan Guru Baru" : `Edit Guru: ${selectedTeacherItem?.nama}`}
+                          </h4>
+                          <button onClick={() => { setIsAddingTeacher(false); setIsEditingTeacher(false); setSelectedTeacherItem(null); }} className="p-1.5 text-slate-400 cursor-pointer">
+                            <X size={18} />
+                          </button>
+                        </div>
+                        <div className="p-5">
+                          <form onSubmit={handleSaveTeacher} className="space-y-4 text-xs">
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kode Guru / NIP</label>
+                              <input type="text" required disabled={isEditingTeacher} value={teacherForm.kodeGuru} onChange={(e) => setTeacherForm({ ...teacherForm, kodeGuru: e.target.value })} placeholder="Contoh: AR-07 atau NIP..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono font-bold text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Nama Lengkap & Gelar</label>
+                              <input type="text" required value={teacherForm.nama} onChange={(e) => setTeacherForm({ ...teacherForm, nama: e.target.value })} placeholder="Contoh: Dian Nugraha, S.E." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-bold text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Jabatan</label>
+                              <input type="text" required value={teacherForm.jabatan} onChange={(e) => setTeacherForm({ ...teacherForm, jabatan: e.target.value })} placeholder="Kepala Lab Komputer..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Mata Pelajaran</label>
+                              <input type="text" required value={teacherForm.mataPelajaran} onChange={(e) => setTeacherForm({ ...teacherForm, mataPelajaran: e.target.value })} placeholder="Jaringan Nirkabel..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kategori</label>
+                              <select value={teacherForm.kategori} onChange={(e) => setTeacherForm({ ...teacherForm, kategori: e.target.value as any })} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 bg-white text-base">
+                                <option value="UMUM">UMUM / AGAMA / OLAHRAGA</option>
+                                <option value="TKJ">TEKNIK KOMPUTER (TKJ)</option>
+                                <option value="PEMASARAN">BISNIS PEMASARAN (BDP)</option>
+                                <option value="PIMPINAN">PIMPINAN SEKOLAH</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Email (Opsional)</label>
+                              <input type="email" value={teacherForm.email} onChange={(e) => setTeacherForm({ ...teacherForm, email: e.target.value })} placeholder="guru@smkarrosyid.sch.id" className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Pendidikan Terakhir (Opsional)</label>
+                              <input type="text" value={teacherForm.pendidikan} onChange={(e) => setTeacherForm({ ...teacherForm, pendidikan: e.target.value })} placeholder="S1 Informatika - UPI" className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">URL Foto Profil (Opsional)</label>
+                              <input type="text" value={teacherForm.foto} onChange={(e) => setTeacherForm({ ...teacherForm, foto: e.target.value })} placeholder="https://..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono text-sm" />
+                            </div>
+                            <div className="flex gap-2 pt-2 pb-4">
+                              <button type="submit" className="flex-1 bg-slate-900 text-amber-400 font-black uppercase py-3.5 rounded-xl cursor-pointer text-xs tracking-widest">SIMPAN GURU</button>
+                              <button type="button" onClick={() => { setIsAddingTeacher(false); setIsEditingTeacher(false); setSelectedTeacherItem(null); }} className="px-5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs">BATAL</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Right Form or Details of Teacher */}
                   <div className="hidden md:block md:w-1/2 p-6 overflow-y-auto bg-slate-50">

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RegistrationData } from "../types";
 import { 
   FileText, Clipboard, CheckCircle, Search, Printer, 
@@ -206,11 +206,13 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
     setValidationError("");
   };
 
-  const executeRegistrationSubmission = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const executeRegistrationSubmission = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
     const error = validateStep(3);
     if (error) {
       setValidationError(error);
+      // Scroll ke atas form agar error terlihat
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -286,8 +288,170 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
     });
   };
 
+
   const printReceipt = () => {
-    window.print();
+    if (!selectedReceipt) return;
+    const r = selectedReceipt;
+
+    const row = (label: string, value: string) =>
+      `<tr><td>${label}</td><td>: <strong>${value || '-'}</strong></td></tr>`;
+
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<title>Kartu Pendaftaran SPMB - SMK Ar Rosyid</title>
+<style>
+  @page { size: A4 portrait; margin: 15mm 16mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 10pt; color: #000; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .wrap { border: 2.5px solid #1e293b; width: 100%; }
+
+  /* ── HEADER ── */
+  .head { background: #fef9c3; border-bottom: 2px solid #1e293b; display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
+  .head-logo { width: 56px; height: 56px; border: 2px solid #d97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 900; color: #92400e; text-align: center; background: #fffbeb; flex-shrink: 0; }
+  .head-info { flex: 1; }
+  .head-info .sub { font-size: 8pt; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em; }
+  .head-info .school { font-size: 15pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
+  .head-info .ta { font-size: 8pt; color: #555; font-style: italic; }
+  .head-noreg { text-align: right; }
+  .head-noreg .label { font-size: 7pt; color: #555; font-weight: 600; text-transform: uppercase; }
+  .head-noreg .val { font-family: monospace; font-size: 11pt; font-weight: 900; background: #fff; border: 1.5px solid #d97706; padding: 4px 10px; display: block; margin-top: 2px; }
+
+  /* ── BODY ── */
+  .body { display: grid; grid-template-columns: 108px 1fr; gap: 0; }
+  .photo-col { border-right: 1.5px solid #e2e8f0; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .photo-box { width: 96px; height: 122px; border: 1.5px dashed #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 7pt; color: #888; text-align: center; gap: 4px; }
+  .photo-stamp { font-size: 6.5pt; font-family: monospace; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; padding: 3px 5px; text-align: center; line-height: 1.5; width: 96px; }
+
+  .data-col { padding: 14px 16px; }
+  .section-title { font-size: 8pt; font-weight: 900; color: #c2410c; text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1.5px solid #fed7aa; padding-bottom: 3px; margin-bottom: 7px; margin-top: 12px; }
+  .section-title:first-child { margin-top: 0; }
+
+  table.tbl { width: 100%; border-collapse: collapse; }
+  table.tbl td { padding: 2.5px 2px; vertical-align: top; font-size: 8.5pt; border-bottom: 0.5px solid #f1f5f9; }
+  table.tbl td:first-child { width: 33%; color: #475569; font-weight: 600; }
+  table.tbl td:last-child { color: #0f172a; }
+  table.tbl td strong { font-weight: 800; }
+
+  /* ── KIP BADGE ── */
+  .kip-yes { color: #dc2626; font-weight: 900; }
+
+  /* ── FOOTER ── */
+  .foot { border-top: 2px solid #1e293b; padding: 10px 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 7.5pt; background: #f8fafc; }
+  .foot .note { color: #475569; line-height: 1.6; }
+  .foot .ttd { text-align: center; }
+  .foot .ttd .place { margin-bottom: 40px; }
+  .foot .ttd strong { font-size: 8pt; }
+  .foot .stamp { text-align: right; color: #475569; }
+  .foot .stamp .box { border: 1px dashed #94a3b8; width: 80px; height: 80px; margin-left: auto; display: flex; align-items: center; justify-content: center; font-size: 7pt; color: #94a3b8; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="head">
+    <div class="head-logo">SMK<br/>AR<br/>ROSYID</div>
+    <div class="head-info">
+      <div class="sub">Kartu Peserta Bukti Registrasi Online</div>
+      <div class="school">SMK AR ROSYID CAMPAKA PUTRA</div>
+      <div class="ta">Penerimaan Siswa &amp; Murid Baru (SPMB) — Tahun Ajaran ${infoTahunAjaran}</div>
+    </div>
+    <div class="head-noreg">
+      <div class="label">No. Registrasi</div>
+      <div class="val">${r.id}</div>
+      <div style="font-size:7pt;color:#64748b;margin-top:4px;">Terdaftar: ${r.timestamp}</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+    <div class="photo-col">
+      <div class="photo-box">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Tempel<br/>Pas Foto<br/>3 × 4
+      </div>
+      <div class="photo-stamp">TERDAFTAR<br/>ONLINE<br/>${r.timestamp}</div>
+    </div>
+
+    <div class="data-col">
+      <!-- I. DATA PRIBADI -->
+      <div class="section-title">I. Data Pribadi Calon Siswa</div>
+      <table class="tbl">
+        ${row('Nama Lengkap', r.namaLengkap?.toUpperCase())}
+        ${row('NISN', r.nisn)}
+        ${row('NIK', r.nik)}
+        ${row('No. KK', r.noKk || '-')}
+        ${row('No. Akta Lahir', r.noAktaLahir || '-')}
+        ${row('Tempat, Tgl Lahir', (r.tempatLahir || '-') + ', ' + (r.tanggalLahir || '-'))}
+        ${row('Jenis Kelamin', r.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan')}
+        ${row('Agama', r.agama || '-')}
+        ${row('Kewarganegaraan', r.kewarganegaraan || 'WNI')}
+        ${row('Anak Ke-', String(r.anakKe || 1))}
+        ${row('Alamat Lengkap', ((r.alamat||'') + ', RT ' + (r.rt||'-') + '/RW ' + (r.rw||'-') + ', Desa ' + (r.desa||'-') + ', Kec. ' + (r.kecamatan||'-') + ', ' + (r.kodePos||'')))}
+        <tr><td>Status KIP</td><td>: <strong class="${r.memilikiKip === 'YA' ? 'kip-yes' : ''}">${r.memilikiKip === 'YA' ? '✔ MEMILIKI KIP' : 'Tidak'}</strong>${r.memilikiKip === 'YA' && r.noKip ? ' &nbsp;|&nbsp; No. KIP: <strong>' + r.noKip + '</strong>' : ''}</td></tr>
+      </table>
+
+      <!-- II. DATA AYAH -->
+      <div class="section-title">II. Data Orang Tua — Ayah Kandung</div>
+      <table class="tbl">
+        ${row('Nama Ayah', (r.namaAyah||'').toUpperCase())}
+        ${row('NIK Ayah', r.nikAyah||'-')}
+        ${row('Tempat, Tgl Lahir', (r.tempatLahirAyah||'-') + ', ' + (r.tanggalLahirAyah||'-'))}
+        ${row('Pendidikan Terakhir', r.pendidikanAyah||'-')}
+        ${row('Pekerjaan', r.pekerjaanAyah||'-')}
+        ${row('Penghasilan Bulanan', r.penghasilanAyah||'-')}
+      </table>
+
+      <!-- III. DATA IBU -->
+      <div class="section-title">III. Data Orang Tua — Ibu Kandung</div>
+      <table class="tbl">
+        ${row('Nama Ibu', (r.namaIbu||'').toUpperCase())}
+        ${row('NIK Ibu', r.nikIbu||'-')}
+        ${row('Tempat, Tgl Lahir', (r.tempatLahirIbu||'-') + ', ' + (r.tanggalLahirIbu||'-'))}
+        ${row('Pendidikan Terakhir', r.pendidikanIbu||'-')}
+        ${row('Pekerjaan', r.pekerjaanIbu||'-')}
+        ${row('Penghasilan Bulanan', r.penghasilanIbu||'-')}
+      </table>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <div class="note">
+      <strong>Catatan Penting:</strong><br/>
+      • Kartu ini wajib dibawa saat verifikasi berkas.<br/>
+      • Tempel pas foto 3×4 pada kotak di atas.<br/>
+      • Dokumen sah dari Sistem Informasi SPMB.
+    </div>
+    <div class="ttd">
+      <div class="place">Campaka, ${new Date().toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})}</div>
+      <strong>Panitia SPMB ${infoTahunAjaran}</strong><br/>
+      <span style="font-size:6.5pt;color:#64748b;">SMK Ar Rosyid Campaka Putra</span>
+    </div>
+    <div class="stamp">
+      <div style="font-size:7pt;color:#475569;margin-bottom:4px;">Cap &amp; Tanda Tangan Resmi:</div>
+      <div class="box">Stempel<br/>Resmi</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
+    doc.open(); doc.write(html); doc.close();
+    iframe.contentWindow?.focus();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 2000);
+    }, 500);
   };
 
   // Quick statistics for landing visual
@@ -470,7 +634,7 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
             )}
 
             {/* FORM MULTISTEP BODY */}
-            <form onSubmit={executeRegistrationSubmission} className="space-y-8">
+            <form onSubmit={(e) => { e.preventDefault(); }} className="space-y-8">
               
               {/* STEP 1: DATA PRIBADI SISWA BARU */}
               {formStep === 1 && (
@@ -634,15 +798,17 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                     {/* ANAK KEBERAPA */}
                     <div className="flex flex-col gap-1">
                       <label id="lbl-anakke" className="text-xs font-bold text-slate-700">ANAK KEBERAPA <span className="text-red-500">*</span></label>
-                      <input
-                        id="txt-anakke"
-                        type="number"
+                      <select
+                        id="sel-anakke"
                         name="anakKe"
                         value={formData.anakKe}
                         onChange={handleInputChange}
-                        min={1}
-                        className="p-3 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-orange-500"
-                      />
+                        className="p-3 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-orange-500 bg-white cursor-pointer"
+                      >
+                        {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                          <option key={n} value={n}>Anak ke-{n}</option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* APA MEMILIKI KIP? dengan opsi pilihan */}
@@ -767,15 +933,23 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t flex justify-end">
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className="bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs px-6 py-3 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md"
-                    >
-                      Lanjut ke Data Ayah
-                      <ChevronRight size={14} />
-                    </button>
+                  <div className="pt-6 border-t flex flex-col gap-3">
+                    {validationError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold flex gap-2 items-start">
+                        <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                        <span>{validationError}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={nextStep}
+                        className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs px-8 py-4 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md min-h-[52px] active:scale-95 w-full sm:w-auto justify-center"
+                      >
+                        Lanjut ke Data Ayah
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -895,22 +1069,30 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t flex justify-between">
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs px-6 py-3 rounded-xl transition cursor-pointer"
-                    >
-                      Sebelumnya
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className="bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs px-6 py-3 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md"
-                    >
-                      Lanjut ke Data Ibu
-                      <ChevronRight size={14} />
-                    </button>
+                  <div className="pt-6 border-t flex flex-col gap-3">
+                    {validationError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold flex gap-2 items-start">
+                        <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                        <span>{validationError}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={prevStep}
+                        className="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-extrabold text-xs px-6 py-4 rounded-xl transition cursor-pointer min-h-[52px]"
+                      >
+                        Sebelumnya
+                      </button>
+                      <button
+                        type="button"
+                        onClick={nextStep}
+                        className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-extrabold text-xs px-8 py-4 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md min-h-[52px] active:scale-95"
+                      >
+                        Lanjut ke Data Ibu
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1030,32 +1212,38 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t flex justify-between">
+                  <div className="pt-6 border-t flex flex-col gap-3">
+                    {(validationError || submitError) && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold flex gap-2 items-start">
+                        <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                        <span>{validationError || submitError}</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row justify-between gap-3">
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs px-6 py-3 rounded-xl transition cursor-pointer"
+                      className="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-extrabold text-xs px-6 py-4 rounded-xl transition cursor-pointer min-h-[52px]"
                     >
                       Sebelumnya
                     </button>
                     <button
-                      type="submit"
+                      type="button"
                       disabled={isSubmitting}
-                      className="bg-gradient-to-r from-yellow-200 to-stone-100 hover:from-yellow-300 hover:to-stone-200 text-slate-900 border border-yellow-300 font-black text-xs px-8 py-3 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        executeRegistrationSubmission(e as any);
+                      }}
+                      className="bg-gradient-to-r from-yellow-200 to-stone-100 hover:from-yellow-300 hover:to-stone-200 active:from-yellow-400 text-slate-900 border border-yellow-300 font-black text-xs px-8 py-4 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 min-h-[52px]"
                     >
                       {isSubmitting ? (
-                        <><Loader2 size={14} className="animate-spin" /> Menyimpan...</>
+                        <><Loader2 size={16} className="animate-spin" /> Menyimpan ke Database...</>
                       ) : (
-                        <><CheckCircle size={14} className="text-amber-700" /> Kirim & Simpan Data Pendaftaran</>
+                        <><CheckCircle size={16} className="text-amber-700" /> Kirim &amp; Simpan Data Pendaftaran</>
                       )}
                     </button>
-                  </div>
-                  {submitError && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold flex gap-2 items-start">
-                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                      {submitError}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 
@@ -1074,41 +1262,41 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                   </div>
 
                   {/* DIGITAL REGISTRATION CARD */}
-                  <div id="print-area" className="border-4 border-dashed border-yellow-300 p-4 md:p-8 rounded-3xl bg-yellow-50/10 max-w-3xl mx-auto print:border-solid print:border-black print:p-4 print:my-0">
-                    <div className="bg-white rounded-2xl shadow-xl border border-yellow-100 overflow-hidden print:shadow-none print:border-none">
+                  <div id="print-area" className="border-4 border-dashed border-yellow-300 p-4 md:p-8 rounded-3xl bg-yellow-50/10 max-w-3xl mx-auto">
+                    <div className="bg-white rounded-2xl shadow-xl border border-yellow-100 overflow-hidden">
                       
-                      {/* Card Header resembling University Student ID with Orange yellow gradients */}
-                      <div className="bg-gradient-to-r from-yellow-101 via-yellow-100 to-stone-101 text-slate-900 p-5 flex justify-between items-center border-b border-yellow-200 print:bg-none print:border-b-2 print:border-slate-800 print:text-black">
+                      {/* Header */}
+                      <div className="card-header bg-gradient-to-r from-yellow-101 via-yellow-100 to-stone-101 text-slate-900 p-5 flex justify-between items-center border-b border-yellow-200">
                         <div>
-                          <div className="font-extrabold text-sm tracking-wide">KARTU PESERTA BUKTI REGISTRASI ONLINE</div>
-                          <div className="font-black text-lg md:text-xl text-slate-950">SMK AR ROSYID CAMPAKA PUTRA</div>
-                          <div className="text-[10px] text-slate-500 italic font-mono uppercase">Tahun Ajaran {infoTahunAjaran}</div>
+                          <div className="title font-extrabold text-sm tracking-wide">KARTU PESERTA BUKTI REGISTRASI ONLINE</div>
+                          <div className="school font-black text-lg md:text-xl text-slate-950">SMK AR ROSYID CAMPAKA PUTRA</div>
+                          <div className="ta text-[10px] text-slate-500 italic font-mono uppercase">Tahun Ajaran {infoTahunAjaran}</div>
                         </div>
-                        <div className="bg-yellow-200/60 text-amber-955 border border-yellow-300 rounded font-bold font-mono text-[11px] uppercase tracking-wider px-3 py-1">
+                        <div className="noreg bg-yellow-200/60 text-amber-955 border border-yellow-300 rounded font-bold font-mono text-[11px] uppercase tracking-wider px-3 py-1">
                           NO REG: {selectedReceipt.id}
                         </div>
                       </div>
 
                       {/* Card Info Details */}
-                      <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                      <div className="card-body p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
                         
-                        {/* Photo placeholder or QR simulator */}
-                        <div className="md:col-span-3 flex flex-col items-center gap-3">
-                          <div className="w-28 h-36 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center p-2 text-center text-[10px] text-slate-400 font-bold select-none aspect-[3/4]">
+                        {/* Photo placeholder */}
+                        <div className="photo-box md:col-span-3 flex flex-col items-center gap-3">
+                          <div className="photo-placeholder w-28 h-36 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center p-2 text-center text-[10px] text-slate-400 font-bold select-none aspect-[3/4]">
                             <User size={32} className="text-slate-300 mb-1" />
                             Foto 3x4 Calon Siswa
                           </div>
-                          <div className="text-[10px] font-mono bg-slate-100 px-2.5 py-1 text-slate-500 rounded text-center leading-tight">
+                          <div className="photo-timestamp text-[10px] font-mono bg-slate-100 px-2.5 py-1 text-slate-500 rounded text-center leading-tight">
                             TERDAFTAR ONLINE<br />
                             {selectedReceipt.timestamp}
                           </div>
                         </div>
 
                         {/* Text data fields */}
-                        <div className="md:col-span-9 space-y-4">
+                        <div className="data-section md:col-span-9 space-y-4">
                           <h4 className="text-xs font-black text-orange-600 border-b border-orange-50 uppercase tracking-widest pb-1">I. DATA PRIBADI SISWA</h4>
                           
-                          <table className="w-full text-xs text-left text-slate-700 font-medium leading-relaxed border-collapse">
+                          <table className="data-table w-full text-xs text-left text-slate-700 font-medium leading-relaxed border-collapse">
                             <tbody>
                               <tr className="border-b border-slate-100">
                                 <td className="py-1 w-1/3 font-semibold text-slate-500">NAMA LENGKAP</td>
@@ -1143,7 +1331,7 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
 
                           <h4 className="text-xs font-black text-orange-600 border-b border-orange-50 uppercase tracking-widest pb-1 pt-2">II. DATA ORANG TUA</h4>
                           
-                          <table className="w-full text-xs text-left text-slate-700 font-medium leading-relaxed border-collapse">
+                          <table className="data-table w-full text-xs text-left text-slate-700 font-medium leading-relaxed border-collapse">
                             <tbody>
                               <tr className="border-b border-slate-100">
                                 <td className="py-1 w-1/3 font-semibold text-slate-500">NAMA AYAH</td>
@@ -1167,7 +1355,7 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                       </div>
 
                       {/* Footer signatures */}
-                      <div className="bg-slate-50/50 p-4 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-500 font-semibold print:border-black print:text-black">
+                      <div className="card-footer bg-slate-50/50 p-4 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-500 font-semibold">
                         <div>
                           * Dokumen ini sah dikeluarkan oleh Sistem Informasi Pendaftaran Akademik SMK Ar Rosyid.
                         </div>

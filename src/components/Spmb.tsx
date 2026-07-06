@@ -309,8 +309,19 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
   .wrap { border: 2.5px solid #1e293b; width: 100%; }
 
   /* ── HEADER ── */
-  .head { background: #fef9c3; border-bottom: 2px solid #1e293b; display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
-  .head-logo { width: 56px; height: 56px; border: 2px solid #d97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 900; color: #92400e; text-align: center; background: #fffbeb; flex-shrink: 0; }
+  .head { background: #fef9c3; border-bottom: 2px solid #1e293b; display: flex; align-items: center; gap: 16px; padding: 14px 18px; }
+  .head-logo {
+    width: 72px; height: 72px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8pt; font-weight: 900; color: #92400e; text-align: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .head-logo img {
+    width: 72px; height: 72px;
+    object-fit: contain;
+    display: block;
+  }
   .head-info { flex: 1; }
   .head-info .sub { font-size: 8pt; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em; }
   .head-info .school { font-size: 15pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
@@ -353,7 +364,12 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
 
   <!-- HEADER -->
   <div class="head">
-    <div class="head-logo">SMK<br/>AR<br/>ROSYID</div>
+    <div class="head-logo">
+      ${settings?.schoolLogo
+        ? `<img src="${settings.schoolLogo}" alt="Logo SMK" />`
+        : `<span style="line-height:1.3;">SMK<br/>AR<br/>ROSYID</span>`
+      }
+    </div>
     <div class="head-info">
       <div class="sub">Kartu Peserta Bukti Registrasi Online</div>
       <div class="school">SMK AR ROSYID CAMPAKA PUTRA</div>

@@ -5,27 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="SMK Ar Rosyid" />
-    <meta name="theme-color" content="#1e293b" />
+    <meta name="theme-color" content="#fffef0" />
     <meta name="description" content="Website Resmi SMK Ar Rosyid Campaka Putra - Pendaftaran SPMB, E-Learning, Absensi Digital" />
+    <meta name="format-detection" content="telephone=no" />
     <title>SMK AR ROSYID CAMPAKA PUTRA</title>
     <style>
-      /* Hanya cegah scroll horizontal — vertikal tetap bebas */
-      html, body, #root {
-        overflow-x: hidden;
-        max-width: 100vw;
-      }
-      html {
-        overscroll-behavior-x: none;   /* Blokir swipe horizontal browser */
-        overscroll-behavior-y: auto;   /* Izinkan scroll vertikal normal */
-      }
-      body {
-        overscroll-behavior-x: none;
-        overscroll-behavior-y: auto;
-        min-height: 100vh;
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html, body {
         margin: 0;
         padding: 0;
+        background-color: #fffef0;
+        overscroll-behavior-x: none;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      html {
+        overflow-x: hidden;
+      }
+
+      body {
+        overflow-x: hidden;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      #root {
+        overflow-x: hidden;
+        min-height: 100vh;
+        background-color: #fffef0;
+        /* Ruang untuk bottom nav bar */
+        padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+      }
+
+      * {
+        -webkit-tap-highlight-color: transparent;
       }
     </style>
   </head>

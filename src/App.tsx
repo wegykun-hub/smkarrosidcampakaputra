@@ -10,6 +10,7 @@ import AdminPanel from "./components/AdminPanel";
 import Absensi from "./components/Absensi";
 import ELearning from "./components/ELearning";
 import WhatsAppWidget from "./components/WhatsAppWidget";
+import BottomNavBar from "./components/BottomNavBar";
 import { CONTACT_INFO } from "./data";
 import { NewsItem, RegistrationData, GalleryItem, DashboardSlide, GeneralSettings } from "./types";
 import { getGeneralSettings } from "./utils/dataStore";
@@ -66,7 +67,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#fffef0] to-[#edece4] flex flex-col justify-between font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-[#fffef0] flex flex-col justify-between font-sans selection:bg-orange-500 selection:text-white">
       
       {/* 1. BRAND NAVIGATION HEADER */}
       <Navigation 
@@ -130,8 +131,9 @@ export default function App() {
       {/* 3. FULLY-DETAILED INDUSTRIAL WEB FOOTER */}
       <footer className="bg-neutral-900 text-stone-300 border-t-4 border-yellow-300 shadow">
         
-        {/* Upper footer links and brand */}
-        <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        {/* Upper footer — hidden on mobile, full on desktop */}
+        <div className="hidden md:block">
+          <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           
           {/* Logo brand & tagline */}
           <div className="md:col-span-4 space-y-4">
@@ -248,7 +250,7 @@ export default function App() {
                 </button>
               </li>
               <li>
-                <button onClick={() => alert("Informasi beasiswa KIP / Prestasi lengkap tersedia di Kampus Utama.")} className="hover:text-amber-400 transition cursor-pointer text-left flex items-center gap-1">
+                <button onClick={() => setTabAndSub("tentang", "sambutan")} className="hover:text-amber-400 transition cursor-pointer text-left flex items-center gap-1">
                   ⭐ Beasiswa KIP & Tahfidz
                 </button>
               </li>
@@ -256,21 +258,33 @@ export default function App() {
           </div>
 
         </div>
+        {/* end hidden md:block */}
+        </div>
 
         {/* Lower footer copyright */}
-        <div className="bg-neutral-950 py-6 border-t border-neutral-850 px-6 font-mono text-[10px]">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="bg-neutral-950 py-4 md:py-6 border-t border-neutral-850 px-4 md:px-6 font-mono text-[10px]">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1.5 text-center sm:text-left">
             <div>
-              &copy; {new Date().getFullYear()} SMK Ar Rosyid Campaka Putra. Hak Cipta Dilindungi Undang-Undang.
+              &copy; {new Date().getFullYear()} SMK Ar Rosyid Campaka Putra. Hak Cipta Dilindungi.
             </div>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-3 items-center">
               <span className="flex items-center gap-1 text-emerald-400">
-                <ShieldCheck size={12} fill="currentColor" className="text-emerald-400/20" />
-                Official Accreditation A
+                <ShieldCheck size={11} fill="currentColor" className="text-emerald-400/20" />
+                Akreditasi A
               </span>
-              <span>Website Resmi SMK</span>
+              <span className="hidden sm:inline">Website Resmi SMK</span>
             </div>
           </div>
+        </div>
+
+        {/* Mobile footer compact — visible only on mobile */}
+        <div className="md:hidden bg-neutral-900 border-t border-neutral-800 px-4 py-4 grid grid-cols-2 gap-3 text-xs font-medium text-stone-400">
+          <button onClick={() => setTabAndSub("tentang", "sambutan")} className="text-left hover:text-amber-400 transition">Sambutan Kepsek</button>
+          <button onClick={() => setTabAndSub("spmb", "formulir")} className="text-left hover:text-amber-400 transition">Daftar SPMB</button>
+          <button onClick={() => setTabAndSub("absensi", "siswa")} className="text-left hover:text-amber-400 transition">Absensi Siswa</button>
+          <button onClick={() => setTabAndSub("elearning", "siswa")} className="text-left hover:text-amber-400 transition">E-Learning</button>
+          <button onClick={() => setTabAndSub("lainnya", "kontak")} className="text-left hover:text-amber-400 transition">Kontak Kami</button>
+          <button onClick={() => setTabAndSub("berita", undefined)} className="text-left hover:text-amber-400 transition">Berita Sekolah</button>
         </div>
 
       </footer>
@@ -292,6 +306,9 @@ export default function App() {
 
       {/* 5. FLOATING WHATSAPP CRITICISM & SUGGESTIONS WIDGET */}
       <WhatsAppWidget settings={settings} />
+
+      {/* 6. MOBILE BOTTOM NAVIGATION BAR */}
+      <BottomNavBar currentTab={currentTab} setTab={setTabAndSub} />
 
     </div>
   );

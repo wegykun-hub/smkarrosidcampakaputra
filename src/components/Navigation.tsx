@@ -107,8 +107,8 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
 
   return (
     <header className="sticky top-0 z-50 w-full shadow-lg font-sans">
-      {/* Top Banner Bar - University Style */}
-      <div className="bg-neutral-900 text-white text-xs py-2 px-4 flex flex-wrap justify-between items-center gap-2 border-b border-yellow-350">
+      {/* Top Banner Bar — hidden on mobile (save space) */}
+      <div className="hidden sm:flex bg-neutral-900 text-white text-xs py-2 px-4 flex-wrap justify-between items-center gap-2 border-b border-yellow-350">
         <div className="flex items-center gap-4 flex-wrap">
           <span className="flex items-center gap-1.5 text-amber-400">
             <Mail size={12} />
@@ -138,17 +138,16 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
       </div>
 
       {/* Main Bar with Logo and Gradasi background */}
-      <div className="bg-gradient-to-r from-yellow-101 via-yellow-100 to-stone-100 text-[#1e293b] py-3 px-4 md:px-8 border-b border-yellow-200 shadow-sm">
+      <div className="bg-gradient-to-r from-yellow-101 via-yellow-100 to-stone-100 text-[#1e293b] py-2 md:py-3 px-3 md:px-8 border-b border-yellow-200 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Logo Brand */}
           <div 
             onClick={() => handleMenuClick("home")} 
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer group"
           >
-            <div className={`w-12 h-12 flex items-center justify-center transform group-hover:scale-105 transition-transform duration-300 ${
+            <div className={`w-9 h-9 md:w-12 md:h-12 flex items-center justify-center transform group-hover:scale-105 transition-transform duration-300 ${
               settings?.schoolLogo ? "" : "bg-white rounded-full p-1 shadow-md border-2 border-yellow-400"
             }`}>
-              {/* Symbolic School Logo or Uploaded Custom Logo */}
               {settings?.schoolLogo ? (
                 <img 
                   src={settings.schoolLogo} 
@@ -158,19 +157,19 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
                 />
               ) : (
                 <div className="w-full h-full rounded-full bg-gradient-to-tr from-yellow-200 to-stone-100 flex flex-col items-center justify-center text-slate-800 font-bold leading-none select-none text-[10px] border border-yellow-300">
-                  <Award size={16} className="text-amber-700 animate-pulse" />
+                  <Award size={14} className="text-amber-700 animate-pulse" />
                   <span className="text-[7px] tracking-tighter">SMK-AR</span>
                 </div>
               )}
             </div>
             <div>
-              <div className="font-black text-lg md:text-xl tracking-tight leading-none text-slate-900">
+              <div className="font-black text-base md:text-xl tracking-tight leading-none text-slate-900">
                 SMK AR ROSYID
               </div>
-              <div className="font-extrabold text-[#78350f] text-xs md:text-sm tracking-widest uppercase pb-0.5">
+              <div className="font-extrabold text-[#78350f] text-[10px] md:text-sm tracking-widest uppercase pb-0.5">
                 Campaka Putra
               </div>
-              <div className="text-[10px] text-slate-550 italic font-medium leading-none hidden sm:block">
+              <div className="text-[9px] text-slate-550 italic font-medium leading-none hidden sm:block">
                 Sekolah Menengah Kejuruan Berkarakter Islami &amp; Unggul
               </div>
             </div>
@@ -234,8 +233,16 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
             ))}
           </nav>
 
-          {/* Toggle Menu Button on Mobile */}
+          {/* Mobile right side: Admin + Hamburger */}
           <div className="lg:hidden flex items-center gap-2">
+            {/* Admin button compact on mobile */}
+            <button
+              onClick={onOpenAdmin}
+              className="sm:hidden flex items-center gap-1 bg-gradient-to-r from-yellow-200 to-stone-100 border border-yellow-300 text-slate-900 px-2.5 py-1.5 rounded-lg text-[10px] font-black cursor-pointer shadow"
+            >
+              <UserCheck size={12} className="text-amber-700" />
+              ADMIN
+            </button>
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-lg text-slate-800 hover:bg-yellow-250 focus:outline-none focus:ring-2 focus:ring-yellow-300 transition-colors"
@@ -262,7 +269,7 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
 
        {/* Mobile Dropdown Menu Navigation */}
       {isOpen && (
-        <div className="lg:hidden bg-white text-slate-900 shadow-2xl border-b border-amber-300 overflow-y-auto max-h-[80vh] transition duration-300 animate-in slide-in-from-top-2">
+        <div className="lg:hidden bg-white text-slate-900 shadow-2xl border-b border-amber-300 overflow-y-auto max-h-[75vh] transition duration-300 animate-in slide-in-from-top-2">
           <div className="p-4 space-y-2">
             <button
               onClick={() => handleMenuClick("home")}
@@ -283,9 +290,7 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
                 </div>
                 {item.children ? (
                   <div className="space-y-1 mt-1 pl-2">
-                    {item.children.map((subItem) => {
-                      const isSubActive = currentTab === item.key; // simple check
-                      return (
+                    {item.children.map((subItem) => (
                         <button
                           key={subItem.sub}
                           onClick={() => handleMenuClick(item.key, subItem.sub)}
@@ -294,8 +299,7 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
                           <span>{subItem.name}</span>
                         </button>
-                      );
-                    })}
+                    ))}
                   </div>
                 ) : (
                   <div className="mt-1 pl-2">

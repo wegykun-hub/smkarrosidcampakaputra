@@ -7,61 +7,70 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* ── Prevent swipe-back/forward navigation on mobile ────── */
-html {
-  overscroll-behavior-x: none;  /* Blokir swipe horizontal saja */
-}
-
-body {
+/* ── Prevent horizontal swipe navigation ─────────────────── */
+html, body {
   overscroll-behavior-x: none;
 }
 
-/* Jangan blokir scroll vertikal */
 #root {
   overflow-x: hidden;
-  touch-action: pan-y pinch-zoom; /* Izinkan scroll vertikal + zoom, blokir horizontal */
 }
 
-/* Custom Legacy Keyframe Animations safe for Tailwind compile */
+/* ── Tap highlight ───────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Animasi slide-up untuk modal ───────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out forwards;
+}
+
+/* ── Animasi spin lambat untuk ikon dekoratif ────────────── */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* ── Marquee ─────────────────────────────────────────────── */
 @keyframes marquee {
-  0% { transform: translateX(100%); }
+  0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
 .animate-marquee {
   display: inline-block;
   padding-left: 100%;
   animation: marquee 25s linear infinite;
 }
-
 .animate-marquee:hover {
   animation-play-state: paused;
 }
 
+/* ── Fade-in ─────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
+  animation: fade-in 0.4s ease-out forwards;
 }
 
-/* Custom background mesh/orange grid pattern */
+/* ── Background patterns ─────────────────────────────────── */
 .bg-orange-grid {
-  background: 
-    linear-gradient(rgba(249, 115, 22, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(249, 115, 22, 0.035) 1px, transparent 1px),
+  background:
+    linear-gradient(rgba(249,115,22,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249,115,22,0.035) 1px, transparent 1px),
     linear-gradient(135deg, #fffef0 0%, #edece4 100%);
   background-size: 20px 20px, 20px 20px, 100% 100%;
 }
 
-/* Orange to Yellow Gradient Backdrop */
 .bg-gradient-school {
   background: linear-gradient(135deg, #ea580c 0%, #f59e0b 50%, #eab308 100%);
 }
@@ -70,36 +79,31 @@ body {
   background: white;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .card-gradient-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.1), 0 10px 10px -5px rgba(249, 115, 22, 0.04);
-  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 20px 25px -5px rgba(249,115,22,0.1), 0 10px 10px -5px rgba(249,115,22,0.04);
+  border-color: rgba(245,158,11,0.4);
 }
 
-/* Custom scrollbar to keep it looking neat and professional */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #fffbfa; }
+::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
 
-::-webkit-scrollbar-track {
-  background: #fffbfa;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-::-webkit-scrollbar-thumb {
-  background: #ea580c;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #f59e0b;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* ── Input 16px agar tidak zoom di iOS ───────────────────── */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

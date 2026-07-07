@@ -246,13 +246,13 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
       </div>
 
       {/* Mobile News Flash / Marquee Bar */}
-      <div className="bg-amber-100 text-slate-900 py-1.5 px-4 overflow-hidden border-b border-yellow-250">
+      <div className="bg-slate-100 text-slate-700 py-1.5 px-4 overflow-hidden border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center gap-3 text-xs">
-          <span className="bg-rose-600 text-white font-black text-[10px] tracking-widest uppercase px-2 py-0.5 rounded flex items-center gap-1 blink shrink-0 shadow-sm animate-pulse">
+          <span className="bg-slate-800 text-white font-black text-[10px] tracking-widest uppercase px-2 py-0.5 rounded flex items-center gap-1 shrink-0">
             <Calendar size={11} /> {settings?.marqueeLabel || 'INFO SPMB:'}
           </span>
           <div className="w-full relative whitespace-nowrap overflow-hidden">
-            <div className="inline-block animate-marquee font-semibold text-slate-800 py-0.5">
+            <div className="inline-block animate-marquee font-semibold text-slate-600 py-0.5">
               {settings?.marqueeText || '⭐ Penerimaan Siswa Didik Baru (SPMB) Gelombang 1 Tahun Ajaran 2026/2027 telah dibuka! Dapatkan Beasiswa Khusus bagi Pemilik Kartu Indonesia Pintar (KIP) & Prestasi. 🌐 Daftarkan Diri Anda Secara Berkas Online dengan Cepat & Cetak Kartu Registrasi Sekarang Juga! ⭐'}
             </div>
           </div>

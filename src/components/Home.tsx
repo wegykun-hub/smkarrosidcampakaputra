@@ -64,46 +64,11 @@ export default function Home({ setTab, onNewsClick, newsList = NEWS_DATA, slides
   };
 
   const quickLinks = [
-    {
-      title: "Tentang Kami",
-      desc: "Visi, Misi & Profil",
-      icon: Building,
-      color: "bg-red-500",
-      tab: "tentang",
-      subTab: "visi-misi"
-    },
-    {
-      title: "Pendaftaran (SPMB)",
-      desc: "Formulir Online Baru",
-      icon: GraduationCap,
-      color: "bg-amber-500",
-      tab: "spmb",
-      subTab: "formulir"
-    },
-    {
-      title: "E-Learning Kelas",
-      desc: "Portal Tugas & Kuis",
-      icon: Laptop,
-      color: "bg-indigo-600",
-      tab: "elearning",
-      subTab: "siswa"
-    },
-    {
-      title: "Program Jurusan",
-      desc: "TKJ & Pemasaran",
-      icon: BookOpen,
-      color: "bg-amber-500",
-      tab: "akademik",
-      subTab: "jurusan"
-    },
-    {
-      title: "Kegiatan & Prestasi",
-      desc: "Aktivitas Ekstrakurikuler",
-      icon: Award,
-      color: "bg-yellow-600",
-      tab: "akademik",
-      subTab: "kegiatan"
-    }
+    { title: "Tentang Kami",       desc: "Visi, Misi & Profil",      icon: Building,     tab: "tentang",  subTab: "visi-misi" },
+    { title: "Pendaftaran (SPMB)", desc: "Formulir Online Baru",      icon: GraduationCap,tab: "spmb",     subTab: "formulir" },
+    { title: "E-Learning Kelas",   desc: "Portal Tugas & Kuis",       icon: Laptop,       tab: "elearning",subTab: "siswa" },
+    { title: "Program Jurusan",    desc: "TKJ & Pemasaran",           icon: BookOpen,     tab: "akademik", subTab: "jurusan" },
+    { title: "Kegiatan & Prestasi",desc: "Aktivitas Ekstrakurikuler", icon: Award,        tab: "akademik", subTab: "kegiatan" },
   ];
 
   const stats = [
@@ -194,11 +159,9 @@ export default function Home({ setTab, onNewsClick, newsList = NEWS_DATA, slides
               <button
                 key={idx}
                 onClick={() => setTab(link.tab, link.subTab)}
-                className="snap-start shrink-0 flex flex-col items-center gap-1.5 bg-white rounded-2xl px-4 py-3 shadow border border-orange-100 cursor-pointer active:scale-95 transition-all min-w-[80px]"
+                className="snap-start shrink-0 flex flex-col items-center gap-1.5 bg-white rounded-2xl px-4 py-3 shadow border border-slate-200 cursor-pointer active:scale-95 transition-all min-w-[80px]"
               >
-                <div className={`w-9 h-9 rounded-xl ${link.color} text-white flex items-center justify-center shadow-sm`}>
-                  <Icon size={16} />
-                </div>
+                <Icon size={22} className="text-slate-700" />
                 <span className="text-[9px] font-black text-slate-800 text-center leading-tight tracking-tight">
                   {link.title}
                 </span>
@@ -215,16 +178,14 @@ export default function Home({ setTab, onNewsClick, newsList = NEWS_DATA, slides
               <div
                 key={idx}
                 onClick={() => setTab(link.tab, link.subTab)}
-                className="bg-white rounded-2xl p-5 shadow-xl border border-orange-100 flex items-center gap-4 cursor-pointer transform hover:-translate-y-1.5 transition-all duration-300 group"
+                className="bg-white rounded-2xl p-5 shadow-xl border border-slate-200 flex items-center gap-4 cursor-pointer transform hover:-translate-y-1.5 transition-all duration-300 group hover:border-slate-400"
               >
-                <div className={`p-4 rounded-2xl ${link.color} text-white shadow-md transform group-hover:rotate-6 transition-transform`}>
-                  <Icon size={24} />
-                </div>
+                <Icon size={26} className="text-slate-700 group-hover:text-slate-900 transition-colors shrink-0" />
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 tracking-tight leading-tight group-hover:text-orange-600 transition-colors">
+                  <h3 className="font-extrabold text-sm text-slate-900 tracking-tight leading-tight group-hover:text-slate-700 transition-colors">
                     {link.title}
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-[11px] text-slate-400 mt-1">
                     {link.desc}
                   </p>
                 </div>

@@ -532,8 +532,8 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
         {activeSub === "jadwal" && (
           <div className="space-y-8">
             <div className="bg-white rounded-3xl p-6 md:p-10 shadow-lg border border-orange-100/60">
-              <h2 className="text-xl md:text-2xl font-black text-slate-950 border-b border-orange-100 pb-4 mb-6 flex items-center gap-2">
-                <span className="w-2.5 h-6 bg-orange-500 rounded-full inline-block"></span>
+              <h2 className="text-xl md:text-2xl font-black text-slate-950 border-b border-slate-200 pb-4 mb-6 flex items-center gap-2">
+                <span className="w-2.5 h-6 bg-slate-800 rounded-full inline-block"></span>
                 Alur Pendaftaran SPMB Online
               </h2>
 
@@ -544,10 +544,10 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                   { step: "03", title: "Cetak Kartu Registrasi", desc: "Unduh dan cetak Kartu Registrasi Anda sebagai bukti pengisian data berhasil." },
                   { step: "04", title: "Pengumuman Kelulusan", desc: "Pantau kelulusan melalui menu Cek Status atau kunjungi langsung kampus SMK." }
                 ].map((item, idx) => (
-                  <div key={idx} className="relative bg-orange-50/20 border border-orange-100 p-5 rounded-2xl flex flex-col justify-between">
-                    <span className="absolute -top-6 left-4 font-black font-mono text-4xl text-orange-200 bg-white px-2 border border-orange-100 rounded-lg">{item.step}</span>
+                  <div key={idx} className="relative bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col justify-between">
+                    <span className="absolute -top-6 left-4 font-black font-mono text-4xl text-slate-300 bg-white px-2 border border-slate-200 rounded-lg">{item.step}</span>
                     <div className="pt-2">
-                      <h3 className="font-extrabold text-sm text-[#7c2d12] mb-1.5">{item.title}</h3>
+                      <h3 className="font-extrabold text-sm text-slate-800 mb-1.5">{item.title}</h3>
                       <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">{item.desc}</p>
                     </div>
                   </div>
@@ -557,8 +557,8 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
 
             {/* Syarat Pendaftaran */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-3xl p-6 md:p-8 shadow-md border border-orange-100/60">
-                <h3 className="font-black text-lg text-slate-900 mb-4 border-b pb-2">Dokumen Syarat Fisik</h3>
+              <div className="bg-white rounded-3xl p-6 md:p-8 shadow-md border border-slate-200">
+                <h3 className="font-black text-lg text-slate-900 mb-4 border-b border-slate-100 pb-2">Dokumen Syarat Fisik</h3>
                 <ul className="text-xs md:text-sm text-slate-600 space-y-2.5 font-medium pl-1">
                   <li className="flex gap-2">✔️ SKL (Surat Keterangan Lulus) atau Ijazah SMP/MTs sederajat</li>
                   <li className="flex gap-2">✔️ Fotokopi Akta Kelahiran & Kartu Keluarga (KK)</li>
@@ -568,18 +568,18 @@ export default function Spmb({ initialSubTab = "jadwal", onNewRegistration, sett
                 </ul>
               </div>
 
-              <div className="bg-orange-600 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-yellow-300 flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-300/10 rounded-full blur-2xl"></div>
+              <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
                 <div>
-                  <h3 className="font-black text-lg text-[#fff2d4] mb-3">⭐ Promo Beasiswa KIP & Prestasi</h3>
-                  <p className="text-xs leading-relaxed text-orange-50 font-medium whitespace-pre-line">
+                  <h3 className="font-black text-lg text-slate-100 mb-3">⭐ Promo Beasiswa KIP & Prestasi</h3>
+                  <p className="text-xs leading-relaxed text-slate-400 font-medium whitespace-pre-line">
                     {infoBatasKip}
                   </p>
                 </div>
                 <div className="mt-6">
                   <button
                     onClick={() => setActiveSub("formulir")}
-                    className="w-full bg-white text-orange-600 font-extrabold text-xs py-3 rounded-xl hover:bg-yellow-300 hover:text-slate-900 transition-colors cursor-pointer shadow"
+                    className="w-full bg-white text-slate-900 font-extrabold text-xs py-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer shadow"
                   >
                     Daftar Secara Online Sekarang juga
                   </button>

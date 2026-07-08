@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Camera, MapPin, Clock, AlertTriangle, CheckCircle2, Trash2, 
   Compass, ShieldCheck, UserCheck, RefreshCw, AlertCircle, 
-  HelpCircle, Image, List, CheckSquare, Smile, Award, Info, Loader2,
+  HelpCircle, List, CheckSquare, Smile, Award, Info, Loader2,
   Lock, UploadCloud
 } from "lucide-react";
 import { AttendanceRecord } from "../types";
@@ -21,7 +21,7 @@ import ModalNotif, { useNotif } from "./ModalNotif";
 const SCHOOL_COORDINATES = {
   latitude: -6.90372,
   longitude: 107.13515,
-  name: "Kampus SMK Ar Rosyid Campaka"
+  name: "SMK Ar Rosyid Campaka"
 };
 
 // Max distance allowed to register attendance (in meters)
@@ -296,7 +296,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setCameraError(
         "Browser Anda tidak mendukung akses kamera. Gunakan Chrome/Firefox terbaru, " +
-        "atau pastikan halaman diakses via HTTPS. Gunakan tombol 'Kamera Simulasi' sebagai alternatif."
+        "atau pastikan halaman diakses via HTTPS."
       );
       return;
     }
@@ -355,7 +355,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
         } catch { /* fallthrough */ }
         msg = "Kamera tidak mendukung resolusi yang diminta.";
       } else {
-        msg = `Kamera tidak dapat dibuka (${err.name}). Gunakan tombol 'Kamera Simulasi' di bawah.`;
+        msg = `Kamera tidak dapat dibuka (${err.name}). Coba refresh halaman dan izinkan akses kamera.`;
       }
       
       setCameraError(msg);
@@ -430,61 +430,6 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
     }
   };
 
-  // Fallback Simulator snapshot
-  const triggerSimulatedPhoto = () => {
-    // Generate a beautiful colorful visual canvas representing a biometric scan of a student
-    const canvas = document.createElement("canvas");
-    canvas.width = 400;
-    canvas.height = 300;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      // background
-      const grad = ctx.createRadialGradient(200, 150, 50, 200, 150, 200);
-      grad.addColorStop(0, '#1e293b');
-      grad.addColorStop(1, '#0f172a');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // outer circle
-      ctx.strokeStyle = '#f97316';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(200, 150, 90, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // inner green target lines
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(100, 150); ctx.lineTo(300, 150);
-      ctx.moveTo(200, 50); ctx.lineTo(200, 250);
-      ctx.stroke();
-
-      // Avatar head
-      ctx.fillStyle = '#f97316';
-      ctx.beginPath();
-      ctx.arc(200, 130, 40, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Body shoulder
-      ctx.beginPath();
-      ctx.arc(200, 220, 55, Math.PI, 0);
-      ctx.fill();
-
-      // text info on picture
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText("BIOMETRIC VALIDATION VERIFIED", 200, 260);
-      ctx.fillStyle = '#a8a29e';
-      ctx.fillText(`Timestamp: ${new Date().toLocaleTimeString('id-ID')}`, 200, 275);
-
-      const mockDataUrl = canvas.toDataURL("image/jpeg");
-      setCapturedPhotoUrl(mockDataUrl);
-      showToast("success", "Foto identifikasi digital berhasil disimulasikan!");
-    }
-  };
-
   // Show status popup toast
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text });
@@ -545,7 +490,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
 
     // Distance enforcement
     if (finalDistance > MAX_ALLOWED_DISTANCE_METERS) {
-      showToast("error", `Presensi Ditolak! Jarak Anda (${finalDistance}m) melebihi batas maksimal kampus (${MAX_ALLOWED_DISTANCE_METERS}m).`);
+      showToast("error", `Presensi Ditolak! Jarak Anda (${finalDistance}m) melebihi batas maksimal smk (${MAX_ALLOWED_DISTANCE_METERS}m).`);
       setIsSavingAttendance(false); return;
     }
 
@@ -748,7 +693,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             }
           </h1>
           <p className="text-xs text-slate-300 font-semibold leading-relaxed max-w-2xl">
-            Validasi presensi harian Siswa dan Guru SMK Ar Rosyid berbasis visual biometrik kamera, sinkronisasi jam kerja, dan batas jarak radius GPS koordinat area Kampus.
+            Validasi presensi harian Siswa dan Guru SMK Ar Rosyid berbasis visual biometrik kamera, sinkronisasi jam kerja, dan batas jarak radius GPS koordinat area smk.
           </p>
         </div>
 
@@ -758,7 +703,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             <Clock size={18} className="text-amber-500 animate-pulse" />
             {timeInfo.text}
           </div>
-          <p className="text-[9px] text-slate-500 font-bold mt-1 uppercase">Kampus Campaka Putra, Cianjur</p>
+          <p className="text-[9px] text-slate-500 font-bold mt-1 uppercase">Smk Ar Rosyid Campaka Putra, Cianjur</p>
         </div>
       </div>
 
@@ -810,7 +755,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold flex items-center gap-1">
                   <MapPin size={12} className="text-amber-500" />
-                  Skenario Jarak Kampus
+                  Skenario Jarak Smk 
                 </span>
                 <span className="font-mono text-amber-400 font-bold">{simulatedDistance} meter</span>
               </div>
@@ -1145,7 +1090,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
                         <Camera size={22} className="animate-pulse" />
                       </div>
                       <p className="text-xs font-bold text-slate-300">Kamera Belum Aktif</p>
-                      <p className="text-[10px] text-slate-500 max-w-xs font-medium">Klik Aktifkan Kamera untuk berfoto atau gunakan simulasi visual jika berada di browser terproteksi.</p>
+                      <p className="text-[10px] text-slate-500 max-w-xs font-medium">Klik Aktifkan Kamera untuk berfoto. Pastikan browser mengizinkan akses kamera.</p>
                     </div>
                   )}
 
@@ -1220,15 +1165,6 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
                     </label>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={triggerSimulatedPhoto}
-                    className="w-full py-2.5 bg-white text-slate-700 font-extrabold text-xs tracking-wider rounded-xl border border-gray-250 hover:bg-slate-50 hover:text-slate-950 transition cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Image size={15} className="text-slate-400" />
-                    KAMERA SIMULASI (TEST / DEMO)
-                  </button>
-
                   {cameraActive && (
                     <button
                       type="button"
@@ -1254,7 +1190,6 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
                       <p className="text-[10px] text-amber-800 font-bold">⚠️ {cameraError}</p>
                       <p className="text-[9px] text-amber-600 font-medium leading-relaxed">
                         Solusi: Klik ikon 🔒 di address bar browser → <b>Izinkan Kamera</b> → refresh halaman.
-                        Atau gunakan tombol <b>"Upload Foto dari File"</b> / <b>"Kamera Simulasi"</b> di atas.
                       </p>
                     </div>
                   )}
@@ -1288,7 +1223,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
               <p className="text-[11px] text-slate-500 font-medium">
                 {useSimulatedGps ? (
                   simulatedDistance <= MAX_ALLOWED_DISTANCE_METERS 
-                    ? "✓ Status GPS valid! Anda terdeteksi berada di dalam area Kampus SMK Ar Rosyid, Cianjur (Aman untuk presensi)." 
+                    ? "✓ Status GPS valid! Anda terdeteksi berada di dalam area SMK Ar Rosyid, Cianjur (Aman untuk presensi)." 
                     : "⚠️ Status GPS Tidak Valid! Jarak Anda berada di luar radius batas maksimal 100 meter. Tombol kirim presensi akan tertutup otomatis."
                 ) : (
                   realDistance !== null 

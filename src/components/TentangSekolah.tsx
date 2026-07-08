@@ -756,9 +756,9 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                           </h3>
                         </div>
 
-                        {/* Codigo Badge */}
-                        <div className="text-right">
-                          <span className="bg-slate-100 text-slate-600 text-[9px] font-mono font-bold px-2 py-0.5 rounded border border-gray-150">
+                        {/* Kode Guru dari admin — rapi, tidak terpotong */}
+                        <div className="shrink-0">
+                          <span className="text-slate-400 text-[8px] font-mono font-bold whitespace-nowrap">
                             {t.kodeGuru}
                           </span>
                         </div>

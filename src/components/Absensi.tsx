@@ -63,18 +63,12 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
   // Combined untuk backward compat tampilan (akan difilter by role)
   const [logs, setLogs] = useState<AttendanceRecord[]>([]);
 
-  // GPS state — aktif otomatis, bisa di-toggle user
-  const [gpsEnabled, setGpsEnabled] = useState<boolean>(false);
-
-  // Auto-fetch GPS saat gpsEnabled berubah jadi true
-  const prevGpsEnabled = React.useRef(false);
-
-  // Simulation controls — waktu selalu riil
-  const useSimulatedGps = !gpsEnabled; // GPS nyata kalau enabled
-  const simulatedDistance = 0;
-  const useSimulatedTime = false;
-  const simulatedHour = 0;
-  const simulatedMinute = 0;
+  // Simulation controls
+  const [useSimulatedGps, setUseSimulatedGps] = useState<boolean>(true);
+  const [simulatedDistance, setSimulatedDistance] = useState<number>(25);
+  const [useSimulatedTime, setUseSimulatedTime] = useState<boolean>(false);
+  const [simulatedHour, setSimulatedHour] = useState<number>(7);
+  const [simulatedMinute, setSimulatedMinute] = useState<number>(15);
 
   // Real GPS State
   const [realCoords, setRealCoords] = useState<{lat: number; lng: number} | null>(null);
@@ -276,23 +270,6 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
       { enableHighAccuracy: true, timeout: 8000 }
     );
   };
-
-  // Auto-fetch GPS saat user enable GPS
-  React.useEffect(() => {
-    if (gpsEnabled && !prevGpsEnabled.current) {
-      setRealCoords(null);
-      setRealDistance(null);
-      setGpsError(null);
-      triggerRealGpsFetch();
-    }
-    if (!gpsEnabled) {
-      setRealCoords(null);
-      setRealDistance(null);
-      setGpsError(null);
-    }
-    prevGpsEnabled.current = gpsEnabled;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gpsEnabled]);
 
   // Helper formula: Haversine distance in meters
   const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -496,24 +473,22 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
     let finalLng = SCHOOL_COORDINATES.longitude;
     let finalDistance = 0;
 
-    if (gpsEnabled) {
-      // GPS aktif — wajib ada koordinat
-      if (isFetchingGps) {
-        showToast("error", "GPS masih mengambil lokasi, tunggu sebentar lalu coba lagi.");
-        setIsSavingAttendance(false); return;
-      }
-      if (gpsError || realDistance === null || realCoords === null) {
-        showToast("error", "Lokasi GPS belum berhasil didapat. Aktifkan GPS dan pastikan izin lokasi diberikan.");
+    if (useSimulatedGps) {
+      finalDistance = simulatedDistance;
+      finalLat += (simulatedDistance / 111111) * 0.707;
+      finalLng += (simulatedDistance / (111111 * Math.cos(finalLat * Math.PI / 180))) * 0.707;
+    } else {
+      if (realDistance === null || realCoords === null) {
+        showToast("error", "Gagal mendapatkan lokasi real GPS Anda. Silakan tekan tombol Ambil Lokasi GPS atau gunakan Mode Simulasi.");
         setIsSavingAttendance(false); return;
       }
       finalDistance = realDistance;
       finalLat = realCoords.lat;
       finalLng = realCoords.lng;
     }
-    // GPS nonaktif — bypass verifikasi jarak, koordinat default sekolah
 
-    // Validasi jarak — hanya jika GPS aktif
-    if (gpsEnabled && finalDistance > MAX_ALLOWED_DISTANCE_METERS) {
+    // Distance enforcement
+    if (finalDistance > MAX_ALLOWED_DISTANCE_METERS) {
       showToast("error", `Presensi Ditolak! Jarak Anda (${finalDistance}m) melebihi batas maksimal sekolah (${MAX_ALLOWED_DISTANCE_METERS}m).`);
       setIsSavingAttendance(false); return;
     }
@@ -760,102 +735,150 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             </div>
           </div>
 
-          {/* Panel GPS Toggle */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm space-y-4">
-            <h3 className="font-extrabold text-xs text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-gray-100">
-              <MapPin size={14} className="text-blue-500" />
-              Lokasi GPS
-            </h3>
-
-            {/* Toggle ON/OFF */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-black text-slate-800">Aktifkan GPS</p>
-                <p className="text-[10px] text-slate-400 font-medium">Verifikasi lokasi dari sekolah</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setGpsEnabled(prev => !prev)}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-300 cursor-pointer focus:outline-none ${
-                  gpsEnabled ? 'bg-blue-500' : 'bg-slate-200'
-                }`}
-              >
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
-                  gpsEnabled ? 'translate-x-6' : 'translate-x-0'
-                }`} />
-              </button>
+          {/* Panel Simulator Pengujian */}
+          <div className="bg-slate-900 text-slate-300 rounded-3xl p-5 border border-slate-780 shadow-md">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <h3 className="font-extrabold text-xs text-amber-400 tracking-wider uppercase flex items-center gap-1.5">
+                <RefreshCw size={13} className="text-amber-400 animate-spin" />
+                Panel Simulator Pengujian
+              </h3>
+              <span className="bg-amber-400 text-slate-950 font-black text-[8px] px-1.5 py-0.5 rounded uppercase">DEVELOPER</span>
             </div>
 
-            {/* Status GPS */}
-            {gpsEnabled && (
-              <div className="space-y-2">
-                {isFetchingGps && (
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-semibold">
-                    <Loader2 size={14} className="animate-spin shrink-0" />
-                    Mengambil koordinat GPS...
-                  </div>
-                )}
-                {!isFetchingGps && gpsError && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
-                    <p className="text-xs text-rose-700 font-bold flex items-center gap-1.5">
-                      <AlertCircle size={14} className="shrink-0" />
-                      GPS Gagal
-                    </p>
-                    <p className="text-[10px] text-rose-600 font-medium leading-relaxed">{gpsError}</p>
-                    <button
-                      type="button"
-                      onClick={triggerRealGpsFetch}
-                      className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black rounded-lg transition cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      <RefreshCw size={11} /> Coba Lagi
-                    </button>
-                  </div>
-                )}
-                {!isFetchingGps && !gpsError && realDistance !== null && (
-                  <div className={`p-3 rounded-xl border space-y-1.5 ${
-                    realDistance <= 100 ? 'bg-green-50 border-green-200' : 'bg-rose-50 border-rose-200'
-                  }`}>
-                    <p className={`text-xs font-black flex items-center gap-1.5 ${
-                      realDistance <= 100 ? 'text-green-700' : 'text-rose-700'
-                    }`}>
-                      {realDistance <= 100 ? (
-                        <><CheckCircle2 size={14} className="shrink-0" /> GPS Berhasil — Di Dalam Radius</>
-                      ) : (
-                        <><AlertCircle size={14} className="shrink-0" /> GPS Berhasil — Di Luar Radius</>
-                      )}
-                    </p>
-                    <p className={`text-[10px] font-mono font-bold ${
-                      realDistance <= 100 ? 'text-green-600' : 'text-rose-600'
-                    }`}>
-                      Jarak: {realDistance} meter dari SMK
-                    </p>
-                    {realCoords && (
-                      <p className="text-[9px] text-slate-400 font-mono">
-                        {realCoords.lat.toFixed(5)}, {realCoords.lng.toFixed(5)}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={triggerRealGpsFetch}
-                      className="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1 mt-1"
-                    >
-                      <RefreshCw size={11} /> Refresh Lokasi
-                    </button>
-                  </div>
-                )}
-                {!isFetchingGps && !gpsError && realDistance === null && (
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 font-medium text-center">
-                    Menunggu respons GPS...
-                  </div>
-                )}
-              </div>
-            )}
+            <p className="text-[10px] text-slate-400 leading-relaxed mt-2.5 font-medium">
+              Gunakan panel ini untuk menguji skenario jarak koordinat GPS dan perubahan jam kerja tanpa perlu berpindah lokasi fisik dari tempat Anda saat ini.
+            </p>
 
-            {!gpsEnabled && (
-              <p className="text-[10px] text-slate-400 font-medium text-center py-1">
-                GPS nonaktif — absensi tidak memerlukan verifikasi lokasi
-              </p>
-            )}
+            {/* GPS Radius Simulator */}
+            <div className="space-y-3 mt-4">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold flex items-center gap-1">
+                  <MapPin size={12} className="text-amber-500" />
+                  Skenario Jarak SMK
+                </span>
+                <span className="font-mono text-amber-400 font-bold">{simulatedDistance} meter</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(15); }}
+                  className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    useSimulatedGps && simulatedDistance === 15
+                      ? 'bg-amber-400 text-slate-950 border-amber-400'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Di Dalam Kelas (15m)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(85); }}
+                  className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    useSimulatedGps && simulatedDistance === 85
+                      ? 'bg-amber-400 text-slate-950 border-amber-400'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Gerbang Parkir (85m)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(350); }}
+                  className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    useSimulatedGps && simulatedDistance === 350
+                      ? 'bg-rose-500 text-white border-rose-500'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Rumah/Luar Radius (350m)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedGps(false); triggerRealGpsFetch(); }}
+                  className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer flex items-center justify-center gap-1 ${
+                    !useSimulatedGps
+                      ? 'bg-blue-500 text-white border-blue-500 animate-pulse'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  <Compass size={11} /> GPS Asli Sensor
+                </button>
+              </div>
+
+              {!useSimulatedGps && (
+                <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[10px] space-y-1">
+                  {isFetchingGps && <p className="text-yellow-400 animate-pulse font-semibold">🔄 Sedang berkomunikasi dengan satelit...</p>}
+                  {gpsError && <p className="text-rose-400 font-semibold">❌ {gpsError}</p>}
+                  {realDistance !== null && (
+                    <p className="text-green-400 font-mono font-bold">
+                      Jarak GPS Asli: {realDistance} meter dari SMK Ar Rosyid.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Time Shift Simulator */}
+            <div className="space-y-3 mt-5 pt-4 border-t border-slate-800">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold flex items-center gap-1">
+                  <Clock size={12} className="text-amber-500" />
+                  Skenario Waktu Presensi
+                </span>
+                <span className="font-mono text-amber-400 font-black">
+                  {useSimulatedTime ? "SIMULASI SHIFT" : "REAL WIB TIME"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedTime(true); setSimulatedHour(7); setSimulatedMinute(15); }}
+                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    useSimulatedTime && simulatedHour === 7 && simulatedMinute === 15
+                      ? 'bg-green-500 text-slate-950 border-green-500'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Pagi (07:15) Tepat Waktu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedTime(true); setSimulatedHour(7); setSimulatedMinute(45); }}
+                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    useSimulatedTime && simulatedHour === 7 && simulatedMinute === 45
+                      ? 'bg-amber-500 text-white border-amber-500'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Pagi (07:45) Terlambat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseSimulatedTime(true); setSimulatedHour(15); setSimulatedMinute(10); }}
+                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    useSimulatedTime && simulatedHour === 15
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Sore (15:10) Jam Pulang
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUseSimulatedTime(false)}
+                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
+                    !useSimulatedTime
+                      ? 'bg-amber-400 text-slate-950 border-amber-400'
+                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
+                  }`}
+                >
+                  Reset ke Waktu Riil
+                </button>
+              </div>
+            </div>
+
           </div>
 
         </div>

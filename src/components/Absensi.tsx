@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Camera, MapPin, Clock, AlertTriangle, CheckCircle2, Trash2, 
   Compass, ShieldCheck, UserCheck, RefreshCw, AlertCircle, 
@@ -63,12 +63,12 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
   // Combined untuk backward compat tampilan (akan difilter by role)
   const [logs, setLogs] = useState<AttendanceRecord[]>([]);
 
-  // Simulation controls
-  const [useSimulatedGps, setUseSimulatedGps] = useState<boolean>(true);
-  const [simulatedDistance, setSimulatedDistance] = useState<number>(25); // default 25 meters (inside campus)
-  const [useSimulatedTime, setUseSimulatedTime] = useState<boolean>(false);
-  const [simulatedHour, setSimulatedHour] = useState<number>(7); // 07:00
-  const [simulatedMinute, setSimulatedMinute] = useState<number>(15); // :15
+  // Simulation controls — GPS dan waktu selalu riil
+  const useSimulatedGps = false;
+  const simulatedDistance = 0;
+  const useSimulatedTime = false;
+  const simulatedHour = 0;
+  const simulatedMinute = 0;
 
   // Real GPS State
   const [realCoords, setRealCoords] = useState<{lat: number; lng: number} | null>(null);
@@ -736,177 +736,6 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             </div>
           </div>
 
-          {/* SIMULATOR PANEL (Very critical for continuous reliable testing inside frame container) */}
-          <div className="bg-slate-900 text-slate-300 rounded-3xl p-5 border border-slate-780 shadow-md">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <h3 className="font-extrabold text-xs text-amber-400 tracking-wider uppercase flex items-center gap-1.5">
-                <RefreshCw size={13} className="text-amber-400 animate-spin" />
-                Panel Simulator Pengujian
-              </h3>
-              <span className="bg-amber-400 text-slate-950 font-black text-[8px] px-1.5 py-0.5 rounded uppercase">DEVELOPER</span>
-            </div>
-
-            <p className="text-[10px] text-slate-400 leading-relaxed mt-2.5 font-medium">
-              Gunakan panel ini untuk menguji skenario jarak koordinat GPS dan perubahan jam kerja tanpa perlu berpindah lokasi fisik dari tempat Anda saat ini.
-            </p>
-
-            {/* GPS Radius Simulator */}
-            <div className="space-y-3 mt-4">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold flex items-center gap-1">
-                  <MapPin size={12} className="text-amber-500" />
-                  Skenario Jarak Smk 
-                </span>
-                <span className="font-mono text-amber-400 font-bold">{simulatedDistance} meter</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedGps(true);
-                    setSimulatedDistance(15);
-                  }}
-                  className={`text-[10px] p-2 rounded-xl font-bold border transition ${
-                    useSimulatedGps && simulatedDistance === 15 
-                      ? 'bg-amber-400 text-slate-950 border-amber-400' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Di Dalam Kelas (15m)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedGps(true);
-                    setSimulatedDistance(85);
-                  }}
-                  className={`text-[10px] p-2 rounded-xl font-bold border transition ${
-                    useSimulatedGps && simulatedDistance === 85 
-                      ? 'bg-amber-400 text-slate-950 border-amber-400' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Gerbang Parkir (85m)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedGps(true);
-                    setSimulatedDistance(350);
-                  }}
-                  className={`text-[10px] p-2 rounded-xl font-bold border transition ${
-                    useSimulatedGps && simulatedDistance === 350
-                      ? 'bg-rose-500 text-white border-rose-500' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Rumah/Luar Radius (350m)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedGps(false);
-                    triggerRealGpsFetch();
-                  }}
-                  className={`text-[10px] p-2 rounded-xl font-bold border transition flex items-center justify-center gap-1 ${
-                    !useSimulatedGps 
-                      ? 'bg-blue-500 text-white border-blue-500 animate-pulse' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750'
-                  }`}
-                >
-                  <Compass size={11} /> GPS Asli Sensor
-                </button>
-              </div>
-
-              {!useSimulatedGps && (
-                <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[10px] space-y-1">
-                  {isFetchingGps && <p className="text-yellow-400 animate-pulse font-semibold">🔄 Sedang berkomunikasi dengan satelit...</p>}
-                  {gpsError && <p className="text-rose-400 font-semibold">❌ {gpsError}</p>}
-                  {realDistance !== null && (
-                    <p className="text-green-400 font-mono font-bold">
-                      Jarak GPS Asli: {realDistance} meter dari SMK Ar Rosyid.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Time Shift Simulator */}
-            <div className="space-y-3 mt-5 pt-4 border-t border-slate-800">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold flex items-center gap-1">
-                  <Clock size={12} className="text-amber-500" />
-                  Skenario Waktu Presensi
-                </span>
-                <span className="font-mono text-amber-400 font-black">
-                  {useSimulatedTime ? "SIMULASI SHIFT" : "REAL WIB TIME"}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedTime(true);
-                    setSimulatedHour(7);
-                    setSimulatedMinute(15);
-                  }}
-                  className={`p-2 rounded-xl font-bold border transition ${
-                    useSimulatedTime && simulatedHour === 7 && simulatedMinute === 15 
-                      ? 'bg-green-500 text-slate-950 border-green-500' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Pagi (07:15) Tepat Waktu
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedTime(true);
-                    setSimulatedHour(7);
-                    setSimulatedMinute(45);
-                  }}
-                  className={`p-2 rounded-xl font-bold border transition ${
-                    useSimulatedTime && simulatedHour === 7 && simulatedMinute === 45 
-                      ? 'bg-amber-550 text-white border-amber-500' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Pagi (07:45) Terlambat
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedTime(true);
-                    setSimulatedHour(15);
-                    setSimulatedMinute(10);
-                  }}
-                  className={`p-2 rounded-xl font-bold border transition ${
-                    useSimulatedTime && simulatedHour === 15 
-                      ? 'bg-blue-500 text-white border-blue-500' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Sore (15:10) Jam Pulang
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseSimulatedTime(false);
-                  }}
-                  className={`p-2 rounded-xl font-bold border transition ${
-                    !useSimulatedTime 
-                      ? 'bg-amber-400 text-slate-950 border-amber-400' 
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Reset ke Waktu Riil
-                </button>
-              </div>
-            </div>
-
-          </div>
 
         </div>
 

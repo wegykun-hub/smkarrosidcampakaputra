@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Camera, MapPin, Clock, AlertTriangle, CheckCircle2, Trash2, 
   Compass, ShieldCheck, UserCheck, RefreshCw, AlertCircle, 
@@ -63,8 +63,14 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
   // Combined untuk backward compat tampilan (akan difilter by role)
   const [logs, setLogs] = useState<AttendanceRecord[]>([]);
 
-  // Simulation controls — GPS dan waktu selalu riil
-  const useSimulatedGps = false;
+  // GPS state — aktif otomatis, bisa di-toggle user
+  const [gpsEnabled, setGpsEnabled] = useState<boolean>(false);
+
+  // Auto-fetch GPS saat gpsEnabled berubah jadi true
+  const prevGpsEnabled = React.useRef(false);
+
+  // Simulation controls — waktu selalu riil
+  const useSimulatedGps = !gpsEnabled; // GPS nyata kalau enabled
   const simulatedDistance = 0;
   const useSimulatedTime = false;
   const simulatedHour = 0;
@@ -271,6 +277,23 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
     );
   };
 
+  // Auto-fetch GPS saat user enable GPS
+  React.useEffect(() => {
+    if (gpsEnabled && !prevGpsEnabled.current) {
+      setRealCoords(null);
+      setRealDistance(null);
+      setGpsError(null);
+      triggerRealGpsFetch();
+    }
+    if (!gpsEnabled) {
+      setRealCoords(null);
+      setRealDistance(null);
+      setGpsError(null);
+    }
+    prevGpsEnabled.current = gpsEnabled;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gpsEnabled]);
+
   // Helper formula: Haversine distance in meters
   const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3; // metres
@@ -473,24 +496,25 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
     let finalLng = SCHOOL_COORDINATES.longitude;
     let finalDistance = 0;
 
-    if (useSimulatedGps) {
-      finalDistance = simulatedDistance;
-      // Synthesize shifted coordinates slightly away based on simulated distance
-      finalLat += (simulatedDistance / 111111) * 0.707;
-      finalLng += (simulatedDistance / (111111 * Math.cos(finalLat * Math.PI / 180))) * 0.707;
-    } else {
-      if (realDistance === null || realCoords === null) {
-        showToast("error", "Gagal mendapatkan lokasi real GPS Anda. Silakan tekan tombol Ambil Lokasi GPS atau gunakan Mode Simulasi.");
+    if (gpsEnabled) {
+      // GPS aktif — wajib ada koordinat
+      if (isFetchingGps) {
+        showToast("error", "GPS masih mengambil lokasi, tunggu sebentar lalu coba lagi.");
+        setIsSavingAttendance(false); return;
+      }
+      if (gpsError || realDistance === null || realCoords === null) {
+        showToast("error", "Lokasi GPS belum berhasil didapat. Aktifkan GPS dan pastikan izin lokasi diberikan.");
         setIsSavingAttendance(false); return;
       }
       finalDistance = realDistance;
       finalLat = realCoords.lat;
       finalLng = realCoords.lng;
     }
+    // GPS nonaktif — bypass verifikasi jarak, koordinat default sekolah
 
-    // Distance enforcement
-    if (finalDistance > MAX_ALLOWED_DISTANCE_METERS) {
-      showToast("error", `Presensi Ditolak! Jarak Anda (${finalDistance}m) melebihi batas maksimal smk (${MAX_ALLOWED_DISTANCE_METERS}m).`);
+    // Validasi jarak — hanya jika GPS aktif
+    if (gpsEnabled && finalDistance > MAX_ALLOWED_DISTANCE_METERS) {
+      showToast("error", `Presensi Ditolak! Jarak Anda (${finalDistance}m) melebihi batas maksimal sekolah (${MAX_ALLOWED_DISTANCE_METERS}m).`);
       setIsSavingAttendance(false); return;
     }
 
@@ -736,6 +760,103 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             </div>
           </div>
 
+          {/* Panel GPS Toggle */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm space-y-4">
+            <h3 className="font-extrabold text-xs text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-gray-100">
+              <MapPin size={14} className="text-blue-500" />
+              Lokasi GPS
+            </h3>
+
+            {/* Toggle ON/OFF */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-black text-slate-800">Aktifkan GPS</p>
+                <p className="text-[10px] text-slate-400 font-medium">Verifikasi lokasi dari sekolah</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGpsEnabled(prev => !prev)}
+                className={`relative w-12 h-6 rounded-full transition-colors duration-300 cursor-pointer focus:outline-none ${
+                  gpsEnabled ? 'bg-blue-500' : 'bg-slate-200'
+                }`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
+                  gpsEnabled ? 'translate-x-6' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+
+            {/* Status GPS */}
+            {gpsEnabled && (
+              <div className="space-y-2">
+                {isFetchingGps && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-semibold">
+                    <Loader2 size={14} className="animate-spin shrink-0" />
+                    Mengambil koordinat GPS...
+                  </div>
+                )}
+                {!isFetchingGps && gpsError && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
+                    <p className="text-xs text-rose-700 font-bold flex items-center gap-1.5">
+                      <AlertCircle size={14} className="shrink-0" />
+                      GPS Gagal
+                    </p>
+                    <p className="text-[10px] text-rose-600 font-medium leading-relaxed">{gpsError}</p>
+                    <button
+                      type="button"
+                      onClick={triggerRealGpsFetch}
+                      className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black rounded-lg transition cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <RefreshCw size={11} /> Coba Lagi
+                    </button>
+                  </div>
+                )}
+                {!isFetchingGps && !gpsError && realDistance !== null && (
+                  <div className={`p-3 rounded-xl border space-y-1.5 ${
+                    realDistance <= 100 ? 'bg-green-50 border-green-200' : 'bg-rose-50 border-rose-200'
+                  }`}>
+                    <p className={`text-xs font-black flex items-center gap-1.5 ${
+                      realDistance <= 100 ? 'text-green-700' : 'text-rose-700'
+                    }`}>
+                      {realDistance <= 100 ? (
+                        <><CheckCircle2 size={14} className="shrink-0" /> GPS Berhasil — Di Dalam Radius</>
+                      ) : (
+                        <><AlertCircle size={14} className="shrink-0" /> GPS Berhasil — Di Luar Radius</>
+                      )}
+                    </p>
+                    <p className={`text-[10px] font-mono font-bold ${
+                      realDistance <= 100 ? 'text-green-600' : 'text-rose-600'
+                    }`}>
+                      Jarak: {realDistance} meter dari SMK
+                    </p>
+                    {realCoords && (
+                      <p className="text-[9px] text-slate-400 font-mono">
+                        {realCoords.lat.toFixed(5)}, {realCoords.lng.toFixed(5)}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={triggerRealGpsFetch}
+                      className="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1 mt-1"
+                    >
+                      <RefreshCw size={11} /> Refresh Lokasi
+                    </button>
+                  </div>
+                )}
+                {!isFetchingGps && !gpsError && realDistance === null && (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 font-medium text-center">
+                    Menunggu respons GPS...
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!gpsEnabled && (
+              <p className="text-[10px] text-slate-400 font-medium text-center py-1">
+                GPS nonaktif — absensi tidak memerlukan verifikasi lokasi
+              </p>
+            )}
+          </div>
 
         </div>
 

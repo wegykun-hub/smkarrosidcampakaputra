@@ -129,10 +129,10 @@ export default function Navigation({ currentTab, setTab, onOpenAdmin, settings }
           </span>
           <button 
             onClick={onOpenAdmin}
-            className="text-[11px] font-bold tracking-wider bg-gradient-to-r from-yellow-200 to-stone-100 border border-yellow-300 text-slate-900 px-3 py-1 rounded-full text-center hover:from-yellow-300 hover:to-stone-200 transition duration-300 flex items-center gap-1 cursor-pointer shadow"
+            className="p-1.5 text-amber-400 hover:text-amber-300 transition cursor-pointer"
+            title="Admin Panel"
           >
-            <UserCheck size={12} className="text-amber-700" />
-            ADMIN PANEL
+            <UserCheck size={18} />
           </button>
         </div>
       </div>

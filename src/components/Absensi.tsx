@@ -65,7 +65,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
 
   // Simulation controls
   const [useSimulatedGps, setUseSimulatedGps] = useState<boolean>(true);
-  const [simulatedDistance, setSimulatedDistance] = useState<number>(25);
+  const [simulatedDistance, setSimulatedDistance] = useState<number>(10);
   const [useSimulatedTime, setUseSimulatedTime] = useState<boolean>(false);
   const [simulatedHour, setSimulatedHour] = useState<number>(7);
   const [simulatedMinute, setSimulatedMinute] = useState<number>(15);
@@ -757,9 +757,9 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(85); }}
+                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(10); }}
                   className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer ${
-                    useSimulatedGps && simulatedDistance === 85
+                    useSimulatedGps && simulatedDistance === 10
                       ? 'bg-amber-400 text-slate-950 border-amber-400'
                       : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
                   }`}

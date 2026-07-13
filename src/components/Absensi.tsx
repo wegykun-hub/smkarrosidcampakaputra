@@ -735,42 +735,26 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             </div>
           </div>
 
-          {/* Panel Simulator Pengujian */}
+          {/* Opsi */}
           <div className="bg-slate-900 text-slate-300 rounded-3xl p-5 border border-slate-780 shadow-md">
             <div className="flex justify-between items-center pb-3 border-b border-slate-800">
               <h3 className="font-extrabold text-xs text-amber-400 tracking-wider uppercase flex items-center gap-1.5">
-                <RefreshCw size={13} className="text-amber-400 animate-spin" />
-                Panel Simulator Pengujian
+                <RefreshCw size={13} className="text-amber-400" />
+                Opsi
               </h3>
-              <span className="bg-amber-400 text-slate-950 font-black text-[8px] px-1.5 py-0.5 rounded uppercase">DEVELOPER</span>
             </div>
 
-            <p className="text-[10px] text-slate-400 leading-relaxed mt-2.5 font-medium">
-              Gunakan panel ini untuk menguji skenario jarak koordinat GPS dan perubahan jam kerja tanpa perlu berpindah lokasi fisik dari tempat Anda saat ini.
-            </p>
-
-            {/* GPS Radius Simulator */}
+            {/* GPS Opsi */}
             <div className="space-y-3 mt-4">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold flex items-center gap-1">
                   <MapPin size={12} className="text-amber-500" />
-                  Skenario Jarak SMK
+                  Lokasi GPS
                 </span>
                 <span className="font-mono text-amber-400 font-bold">{simulatedDistance} meter</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(15); }}
-                  className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer ${
-                    useSimulatedGps && simulatedDistance === 15
-                      ? 'bg-amber-400 text-slate-950 border-amber-400'
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Di Dalam Kelas (15m)
-                </button>
                 <button
                   type="button"
                   onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(85); }}
@@ -780,18 +764,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
                       : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
                   }`}
                 >
-                  Gerbang Parkir (85m)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUseSimulatedGps(true); setSimulatedDistance(350); }}
-                  className={`text-[10px] p-2 rounded-xl font-bold border transition cursor-pointer ${
-                    useSimulatedGps && simulatedDistance === 350
-                      ? 'bg-rose-500 text-white border-rose-500'
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Rumah/Luar Radius (350m)
+                  Gerbang Parkir (10m)
                 </button>
                 <button
                   type="button"
@@ -819,52 +792,19 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
               )}
             </div>
 
-            {/* Time Shift Simulator */}
+            {/* Waktu */}
             <div className="space-y-3 mt-5 pt-4 border-t border-slate-800">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold flex items-center gap-1">
                   <Clock size={12} className="text-amber-500" />
-                  Skenario Waktu Presensi
+                  Waktu Presensi
                 </span>
                 <span className="font-mono text-amber-400 font-black">
-                  {useSimulatedTime ? "SIMULASI SHIFT" : "REAL WIB TIME"}
+                  {useSimulatedTime ? "SIMULASI" : "REAL WIB"}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => { setUseSimulatedTime(true); setSimulatedHour(7); setSimulatedMinute(15); }}
-                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
-                    useSimulatedTime && simulatedHour === 7 && simulatedMinute === 15
-                      ? 'bg-green-500 text-slate-950 border-green-500'
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Pagi (07:15) Tepat Waktu
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUseSimulatedTime(true); setSimulatedHour(7); setSimulatedMinute(45); }}
-                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
-                    useSimulatedTime && simulatedHour === 7 && simulatedMinute === 45
-                      ? 'bg-amber-500 text-white border-amber-500'
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Pagi (07:45) Terlambat
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUseSimulatedTime(true); setSimulatedHour(15); setSimulatedMinute(10); }}
-                  className={`p-2 rounded-xl font-bold border transition cursor-pointer ${
-                    useSimulatedTime && simulatedHour === 15
-                      ? 'bg-blue-500 text-white border-blue-500'
-                      : 'bg-slate-800 border-slate-700 hover:bg-slate-750 text-slate-300'
-                  }`}
-                >
-                  Sore (15:10) Jam Pulang
-                </button>
+              <div className="grid grid-cols-1 gap-2 text-[10px]">
                 <button
                   type="button"
                   onClick={() => setUseSimulatedTime(false)}

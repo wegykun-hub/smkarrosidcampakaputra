@@ -722,7 +722,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
             <div className="space-y-3.5 text-xs text-slate-600 font-medium">
               <div className="p-3 bg-estate bg-green-50/50 rounded-xl border border-green-100">
                 <span className="block text-green-700 font-extrabold mb-0.5">📍 Batas Radius Maksimal</span>
-                Wajib berada maksimal <strong className="text-green-800">100 meter</strong> dari koordinat pusat SMK Ar Rosyid Campaka Putra.
+                Wajib berada maksimal <strong className="text-green-800">10 meter</strong> dari koordinat pusat SMK Ar Rosyid Campaka Putra.
               </div>
 
               <div className="p-3 bg-amber-5/50 border border-amber-100 rounded-xl">

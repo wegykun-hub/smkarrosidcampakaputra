@@ -1137,7 +1137,7 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
                 {useSimulatedGps ? (
                   simulatedDistance <= MAX_ALLOWED_DISTANCE_METERS 
                     ? "✓ Status GPS valid! Anda terdeteksi berada di dalam area SMK Ar Rosyid, Cianjur (Aman untuk presensi)." 
-                    : "⚠️ Status GPS Tidak Valid! Jarak Anda berada di luar radius batas maksimal 100 meter. Tombol kirim presensi akan tertutup otomatis."
+                    : "⚠️ Status GPS Tidak Valid! Jarak Anda berada di luar radius batas maksimal 10 meter. Tombol kirim presensi akan tertutup otomatis."
                 ) : (
                   realDistance !== null 
                     ? (realDistance <= MAX_ALLOWED_DISTANCE_METERS ? "✓ GPS Sinkron! Anda berada di dalam koordinat Ar Rosyid." : "⚠️ GPS Tidak Valid! Jarak asli Anda terlalu jauh dari lokasi Ar Rosyid Campaka Putra.") 

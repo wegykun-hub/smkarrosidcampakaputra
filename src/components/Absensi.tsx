@@ -18,10 +18,11 @@ import { uploadAttendancePhoto } from "../lib/services/storageService";
 import ModalNotif, { useNotif } from "./ModalNotif";
 
 // Official Coordinates of SMK Ar Rosyid Campaka Putra (Campaka, Cianjur)
+// Koordinat telah diverifikasi: Kp. Campaka Putra, Desa Campaka, Kec. Campaka, Kab. Cianjur
 const SCHOOL_COORDINATES = {
-  latitude: -6.90372,
-  longitude: 107.13515,
-  name: "SMK Ar Rosyid Campaka"
+  latitude: -6.903481,
+  longitude: 107.135187,
+  name: "SMK Ar Rosyid Campaka Putra"
 };
 
 // Max distance allowed to register attendance (in meters)

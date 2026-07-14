@@ -24,6 +24,7 @@ function studentToDb(s: EnrolledStudent) {
     jenis_kelamin: s.jenisKelamin,
     alamat: s.alamat ?? null,
     telepon: s.telepon ?? null,
+    telepon_ortu: s.telepon_ortu ?? null,
     status: s.status,
   };
 }
@@ -37,6 +38,7 @@ function studentFromDb(row: any): EnrolledStudent {
     jenisKelamin: row.jenis_kelamin,
     alamat: row.alamat ?? undefined,
     telepon: row.telepon ?? undefined,
+    telepon_ortu: row.telepon_ortu ?? undefined,
     status: row.status,
   };
 }
@@ -114,6 +116,7 @@ export async function updateStudent(
   if (updates.jenisKelamin) dbUpdates.jenis_kelamin = updates.jenisKelamin;
   if (updates.alamat !== undefined) dbUpdates.alamat = updates.alamat;
   if (updates.telepon !== undefined) dbUpdates.telepon = updates.telepon;
+  if (updates.telepon_ortu !== undefined) dbUpdates.telepon_ortu = updates.telepon_ortu;
   if (updates.status)       dbUpdates.status = updates.status;
 
   const { error } = await (supabase as any)

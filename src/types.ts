@@ -83,6 +83,7 @@ export interface EnrolledStudent {
   jenisKelamin: 'L' | 'P';
   alamat?: string;
   telepon?: string;
+  telepon_ortu?: string; // No WA orang tua untuk notifikasi Fonnte
   status: 'AKTIF' | 'ALUMNI' | 'MUTASI';
 }
 

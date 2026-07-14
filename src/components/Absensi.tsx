@@ -16,6 +16,7 @@ import {
 import { fetchStudents, fetchTeachers } from "../lib/services/rosterService";
 import { uploadAttendancePhoto } from "../lib/services/storageService";
 import ModalNotif, { useNotif } from "./ModalNotif";
+import { sendWhatsApp, buildAbsensiWAMessage } from "../lib/services/fonnteService";
 
 // Official Coordinates of SMK Ar Rosyid Campaka Putra (Campaka, Cianjur)
 // Koordinat telah diverifikasi: Kp. Campaka Putra, Desa Campaka, Kec. Campaka, Kab. Cianjur
@@ -559,6 +560,23 @@ export default function Absensi({ initialRole, settings }: AbsensiProps) {
         latitude: rec.latitude, longitude: rec.longitude,
         distanceInMeters: rec.distanceInMeters, status: rec.status, kelas: rec.kelas,
       }, ...prev]);
+
+      // ── Kirim notifikasi WA ke orang tua via Fonnte (background, tidak blocking) ──
+      if (found?.telepon_ortu) {
+        const waMsg = buildAbsensiWAMessage({
+          namaSiswa: rec.nama,
+          kelas: found.kelas || '-',
+          jurusan: found.jurusan || '-',
+          tipe: presenceType,
+          status: statusDetermined,
+          timestamp: ts,
+          jarak: finalDistance,
+        });
+        sendWhatsApp(found.telepon_ortu, waMsg).then(r => {
+          if (r.success) console.log('[WA] Notif terkirim ke ortu', found.telepon_ortu);
+          else console.warn('[WA] Notif gagal:', r.error);
+        }).catch(() => {/* silent */});
+      }
 
       // Upload foto asli ke Storage di background (tidak blocking)
       uploadAttendancePhoto(capturedPhotoUrl, uniqueId).then(async storageUrl => {

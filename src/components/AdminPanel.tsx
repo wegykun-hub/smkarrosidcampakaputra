@@ -2337,6 +2337,10 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               <input type="text" value={studentForm.telepon} onChange={(e) => setStudentForm({ ...studentForm, telepon: e.target.value })} placeholder="0857XXXXXXXX" className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
                             </div>
                             <div className="space-y-1">
+                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">No. WA Orang Tua (untuk notif absensi)</label>
+                              <input type="text" value={(studentForm as any).telepon_ortu || ''} onChange={(e) => setStudentForm({ ...studentForm, telepon_ortu: e.target.value } as any)} placeholder="08xxxxxxxxxx" className="w-full p-3 border border-orange-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                            </div>
+                            <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Alamat (Opsional)</label>
                               <textarea value={studentForm.alamat} onChange={(e) => setStudentForm({ ...studentForm, alamat: e.target.value })} placeholder="Alamat tinggal..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 h-20 resize-none text-base" />
                             </div>
@@ -2449,6 +2453,19 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               onChange={(e) => setStudentForm({ ...studentForm, telepon: e.target.value })}
                               placeholder="Contoh: 0857XXXXXXXX"
                               className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="font-extrabold text-slate-500 uppercase block tracking-wider text-orange-600">
+                              No. WA Orang Tua <span className="text-[9px] normal-case font-semibold text-slate-400">(untuk notifikasi absensi otomatis)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={(studentForm as any).telepon_ortu || ''}
+                              onChange={(e) => setStudentForm({ ...studentForm, telepon_ortu: e.target.value } as any)}
+                              placeholder="08xxxxxxxxxx"
+                              className="w-full p-2.5 border border-orange-200 rounded-xl focus:outline-none focus:border-orange-500"
                             />
                           </div>
 

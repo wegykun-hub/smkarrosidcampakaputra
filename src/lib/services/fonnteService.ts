@@ -1,54 +1,39 @@
 /**
- * Fonnte WhatsApp API Service
- * https://fonnte.com
+ * Fonnte WhatsApp Service
  *
- * Setup:
- * 1. Daftar di https://fonnte.com → tambahkan device WA
- * 2. Copy Token dari dashboard
- * 3. Isi VITE_FONNTE_TOKEN di file .env
+ * Memanggil Vercel Serverless Function /api/send-wa
+ * agar token tidak exposed di frontend dan CORS tidak jadi masalah.
+ *
+ * Setup Vercel:
+ *   Dashboard → Settings → Environment Variables
+ *   Tambahkan: FONNTE_TOKEN = <token dari dashboard fonnte.com>
  */
 
-const FONNTE_TOKEN = (import.meta as any).env?.VITE_FONNTE_TOKEN as string | undefined;
-
 /**
- * Kirim pesan WhatsApp via Fonnte
- * @param target  Nomor WA (08xxx atau 628xxx)
- * @param message Isi pesan teks
+ * Kirim WA via proxy server /api/send-wa
  */
 export async function sendWhatsApp(
   target: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!FONNTE_TOKEN || FONNTE_TOKEN.trim() === "" || FONNTE_TOKEN === "ISI_TOKEN_FONNTE") {
-    console.warn("[Fonnte] Token belum diset. Notif WA dilewati.");
-    return { success: false, error: "Token Fonnte belum dikonfigurasi" };
-  }
-
-  const phone = normalizePhone(target);
-  if (!phone) {
-    return { success: false, error: "Nomor WA tidak valid" };
+  if (!target || !message) {
+    return { success: false, error: "target dan message wajib diisi" };
   }
 
   try {
-    const form = new FormData();
-    form.append("target", phone);
-    form.append("message", message);
-    form.append("countryCode", "62");
-
-    const res = await fetch("https://api.fonnte.com/send", {
+    const res = await fetch("/api/send-wa", {
       method: "POST",
-      headers: { Authorization: FONNTE_TOKEN },
-      body: form,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target, message }),
     });
 
-    const data = await res.json() as { status: boolean; reason?: string; message?: string };
-
-    if (data.status === true) {
-      console.log(`[Fonnte] WA terkirim ke ${phone}`);
-      return { success: true };
+    const data = await res.json() as { success: boolean; error?: string };
+    if (data.success) {
+      console.log(`[Fonnte] WA terkirim ke ${target}`);
+    } else {
+      console.warn("[Fonnte] Gagal:", data.error);
     }
-    console.warn("[Fonnte] Gagal:", data.reason || data.message);
-    return { success: false, error: data.reason || data.message || "Gagal" };
+    return data;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[Fonnte] Error:", msg);
@@ -56,17 +41,7 @@ export async function sendWhatsApp(
   }
 }
 
-/** Normalisasi nomor Indonesia → format 628xxx */
-function normalizePhone(phone: string): string {
-  if (!phone) return "";
-  const d = phone.replace(/\D/g, "");
-  if (d.startsWith("62")) return d;
-  if (d.startsWith("0"))  return "62" + d.slice(1);
-  if (d.startsWith("8"))  return "62" + d;
-  return d;
-}
-
-/** Buat pesan notif absensi untuk orang tua */
+/** Buat pesan notifikasi absensi untuk orang tua */
 export function buildAbsensiWAMessage(p: {
   namaSiswa: string;
   kelas: string;

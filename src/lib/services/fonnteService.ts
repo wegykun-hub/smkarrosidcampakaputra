@@ -1,17 +1,8 @@
 /**
  * Fonnte WhatsApp Service
- *
  * Memanggil Vercel Serverless Function /api/send-wa
- * agar token tidak exposed di frontend dan CORS tidak jadi masalah.
- *
- * Setup Vercel:
- *   Dashboard → Settings → Environment Variables
- *   Tambahkan: FONNTE_TOKEN = <token dari dashboard fonnte.com>
  */
 
-/**
- * Kirim WA via proxy server /api/send-wa
- */
 export async function sendWhatsApp(
   target: string,
   message: string
@@ -21,11 +12,18 @@ export async function sendWhatsApp(
   }
 
   try {
+    // /api/send-wa adalah Vercel serverless function
     const res = await fetch("/api/send-wa", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target, message }),
     });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.warn("[Fonnte] HTTP error:", res.status, text);
+      return { success: false, error: `Server error ${res.status}` };
+    }
 
     const data = await res.json() as { success: boolean; error?: string };
     if (data.success) {
@@ -36,7 +34,7 @@ export async function sendWhatsApp(
     return data;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[Fonnte] Error:", msg);
+    console.error("[Fonnte] Network error:", msg);
     return { success: false, error: msg };
   }
 }

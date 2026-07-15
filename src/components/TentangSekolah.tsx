@@ -463,23 +463,6 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                 <Search size={14} className="absolute left-3.5 top-4 text-slate-400" />
               </div>
 
-              {/* Middle filter counters */}
-              <div className="flex flex-wrap items-center justify-center gap-1">
-                {(['SEMUA', 'PIMPINAN', 'TKJ', 'PEMASARAN', 'UMUM'] as const).map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategoryFilter(cat)}
-                    className={`text-[10px] font-extrabold px-3 py-1.5 rounded-lg border transition cursor-pointer ${
-                      categoryFilter === cat 
-                        ? 'bg-slate-950 text-[#fca5a5] border-slate-950 shadow-sm'
-                        : 'bg-[#fafaf9] text-slate-600 border-gray-150 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
               {/* Right Admin Area Trigger */}
               <div className="flex justify-end gap-2 shrink-0 w-full md:w-auto">
                 <button

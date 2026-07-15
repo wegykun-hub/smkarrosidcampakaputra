@@ -768,12 +768,15 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
     }
 
     const cleanKode = teacherForm.kodeGuru.trim().toUpperCase();
-    const cleanNama = teacherForm.nama.trim().toUpperCase();
+    const cleanNama = teacherForm.nama.trim();
 
-    // Cek duplikat kode (hanya saat tambah baru)
-    if (!isEditingTeacher && teachers.some(t => t.kodeGuru.toUpperCase() === cleanKode)) {
-      notifError("Kode Sudah Ada", `Gagal: Kode Guru "${cleanKode}" sudah terdaftar!`);
-      return;
+    // Cek duplikat kode — hanya untuk tambah baru, atau jika kode berubah saat edit
+    const kodeChanged = isEditingTeacher && selectedTeacherItem?.kodeGuru.toUpperCase() !== cleanKode;
+    if (!isEditingTeacher || kodeChanged) {
+      if (teachers.some(t => t.kodeGuru.toUpperCase() === cleanKode && t.id !== selectedTeacherItem?.id)) {
+        notifError("Kode Sudah Ada", `Gagal: Kode Guru "${cleanKode}" sudah dipakai oleh guru lain!`);
+        return;
+      }
     }
 
     const payload: import('../types').TeacherProfile = {
@@ -794,6 +797,11 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
     // Simpan ke teacher_profiles
     const r1 = await upsertTeacherProfile(payload);
     if (!r1.success) { notifError('Gagal Menyimpan', r1.error || 'Terjadi kesalahan.'); return; }
+
+    // Jika kode berubah saat edit, hapus kode lama dari tabel teachers (absensi)
+    if (kodeChanged && selectedTeacherItem?.kodeGuru) {
+      await deleteTeacher(selectedTeacherItem.kodeGuru);
+    }
 
     // Sync ke tabel teachers (absensi)
     const teacherData = {
@@ -2686,15 +2694,11 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                           <form onSubmit={handleSaveTeacher} className="space-y-4 text-xs">
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kode Guru / NIP</label>
-                              <input type="text" required disabled={isEditingTeacher} value={teacherForm.kodeGuru} onChange={(e) => setTeacherForm({ ...teacherForm, kodeGuru: e.target.value })} placeholder="Contoh: AR-07 atau NIP..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono font-bold text-base" />
+                              <input type="text" required value={teacherForm.kodeGuru} onChange={(e) => setTeacherForm({ ...teacherForm, kodeGuru: e.target.value })} placeholder="Contoh: AR-07 atau NIP..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono font-bold text-base" />
                             </div>
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Nama Lengkap & Gelar</label>
                               <input type="text" required value={teacherForm.nama} onChange={(e) => setTeacherForm({ ...teacherForm, nama: e.target.value })} placeholder="Contoh: Dian Nugraha, S.E." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 font-bold text-base" />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Jabatan</label>
-                              <input type="text" required value={teacherForm.jabatan} onChange={(e) => setTeacherForm({ ...teacherForm, jabatan: e.target.value })} placeholder="Kepala Lab Komputer..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
                             </div>
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Mata Pelajaran</label>
@@ -2702,12 +2706,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                             </div>
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kategori</label>
-                              <select value={teacherForm.kategori} onChange={(e) => setTeacherForm({ ...teacherForm, kategori: e.target.value as any })} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 bg-white text-base">
-                                <option value="UMUM">UMUM / AGAMA / OLAHRAGA</option>
-                                <option value="TKJ">TEKNIK KOMPUTER (TKJ)</option>
-                                <option value="PEMASARAN">BISNIS PEMASARAN (BDP)</option>
-                                <option value="PIMPINAN">PIMPINAN SEKOLAH</option>
-                              </select>
+                              <input type="text" value={teacherForm.kategori} onChange={(e) => setTeacherForm({ ...teacherForm, kategori: e.target.value as any })} placeholder="Contoh: TKJ, PEMASARAN, UMUM, PIMPINAN..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
                             </div>
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Email (Opsional)</label>
@@ -2747,7 +2746,6 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               <input
                                 type="text"
                                 required
-                                disabled={isEditingTeacher}
                                 value={teacherForm.kodeGuru}
                                 onChange={(e) => setTeacherForm({ ...teacherForm, kodeGuru: e.target.value })}
                                 placeholder="Contoh: AR-07 atau NIP..."
@@ -2757,16 +2755,13 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kategori Program Studi</label>
-                              <select
+                              <input
+                                type="text"
                                 value={teacherForm.kategori}
                                 onChange={(e) => setTeacherForm({ ...teacherForm, kategori: e.target.value as any })}
+                                placeholder="Contoh: TKJ, PEMASARAN, UMUM, PIMPINAN..."
                                 className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500"
-                              >
-                                <option value="UMUM">UMUM / AGAMA / OLAHRAGA</option>
-                                <option value="TKJ">TEKNIK KOMPUTER JARINGAN (TKJ)</option>
-                                <option value="PEMASARAN">BISNIS DARING PEMASARAN (BDP)</option>
-                                <option value="PIMPINAN">PIMPINAN SEKOLAH</option>
-                              </select>
+                              />
                             </div>
                           </div>
 
@@ -2782,30 +2777,16 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                             />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Struktur Jabatan</label>
-                              <input
-                                type="text"
-                                required
-                                value={teacherForm.jabatan}
-                                onChange={(e) => setTeacherForm({ ...teacherForm, jabatan: e.target.value })}
-                                placeholder="Contoh: Kepala Lab Komputer"
-                                className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500"
-                              />
-                            </div>
-
-                            <div className="space-y-1">
-                              <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Mata Pelajaran Utama</label>
-                              <input
-                                type="text"
-                                required
-                                value={teacherForm.mataPelajaran}
-                                onChange={(e) => setTeacherForm({ ...teacherForm, mataPelajaran: e.target.value })}
-                                placeholder="Contoh: Jaringan Nirkabel"
-                                className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500"
-                              />
-                            </div>
+                          <div className="space-y-1">
+                            <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Mata Pelajaran Utama</label>
+                            <input
+                              type="text"
+                              required
+                              value={teacherForm.mataPelajaran}
+                              onChange={(e) => setTeacherForm({ ...teacherForm, mataPelajaran: e.target.value })}
+                              placeholder="Contoh: Jaringan Nirkabel"
+                              className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500"
+                            />
                           </div>
 
                           <div className="space-y-1">
@@ -2930,7 +2911,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
                         <div className="grid grid-cols-2 gap-4 text-xs">
                           <div>
-                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Struktur Jabatan</span>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Jabatan</span>
                             <strong className="text-slate-800">{selectedTeacherItem.jabatan}</strong>
                           </div>
                           <div>

@@ -544,7 +544,7 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                 <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                   <h3 className="font-black text-slate-950 text-sm md:text-base flex items-center gap-2">
                     <GraduationCap className="text-orange-500" />
-                    {editingTeacher ? `EDIT PROFIL GURU: ${editingTeacher.nama.toUpperCase()}` : "TAMBAH PROFIL GURU BARU"}
+                    {editingTeacher ? `Edit Profil Guru: ${editingTeacher.nama}` : "Tambah Profil Guru Baru"}
                   </h3>
                   <button 
                     onClick={() => { setIsFormOpen(false); setEditingTeacher(null); }}
@@ -749,9 +749,9 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                               ? 'bg-emerald-50 text-emerald-750 border border-emerald-200'
                               : 'bg-amber-50 text-amber-700 border border-amber-200'
                           }`}>
-                            {t.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : `PRODUKTIF ${t.kategori}`}
+                            {t.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : t.kategori}
                           </span>
-                          <h3 className="font-extrabold text-sm text-slate-900 group-hover:text-orange-600 transition leading-tight uppercase">
+                          <h3 className="font-extrabold text-sm text-slate-900 group-hover:text-orange-600 transition leading-tight">
                             {t.nama}
                           </h3>
                         </div>
@@ -767,11 +767,6 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                       {/* Details Segment */}
                       <div className="p-6 pt-2 pb-6 flex-grow space-y-3.5 text-xs text-slate-600 font-medium border-b border-gray-50">
                         
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-slate-450 uppercase tracking-wider font-extrabold block">Jabatan Utama:</span>
-                          <strong className="text-slate-800 font-semibold text-xs leading-tight block">{t.jabatan}</strong>
-                        </div>
-
                         <div className="space-y-1">
                           <span className="text-[10px] text-slate-450 uppercase tracking-wider font-extrabold block">Spesialisasi Mapel:</span>
                           <span className="text-slate-700 flex items-center gap-1">
@@ -1002,7 +997,7 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                       ? 'border-emerald-200 text-emerald-700'
                       : 'border-amber-200 text-amber-700'
                   }`}>
-                    {selectedTeacher.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : `PRODUKTIF ${selectedTeacher.kategori}`}
+                    {selectedTeacher.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : selectedTeacher.kategori}
                   </span>
                 </div>
               </div>
@@ -1020,12 +1015,9 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
 
                 {/* Header Info */}
                 <div className="space-y-2">
-                  <h3 className="font-extrabold text-lg md:text-xl text-slate-950 leading-tight uppercase tracking-tight">
+                  <h3 className="font-extrabold text-lg md:text-xl text-slate-950 leading-tight tracking-tight">
                     {selectedTeacher.nama}
                   </h3>
-                  <div className="bg-orange-50 text-orange-850 font-extrabold text-[11px] uppercase tracking-wider px-3 py-1.5 rounded-xl w-fit border border-orange-150">
-                    {selectedTeacher.jabatan}
-                  </div>
                 </div>
 
                 {/* Information Rows */}

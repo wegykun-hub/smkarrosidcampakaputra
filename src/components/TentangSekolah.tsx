@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { VISI_MISI, SAMBUTAN_KEPALA_SEKOLAH, FASILITAS } from "../data";
 import { 
   Award, BookOpen, Clock, Heart, Users, Search, Plus, Trash2, 
@@ -93,7 +93,7 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
   const [activeSub, setActiveSub] = useState(initialSubTab);
 
   // Dynamic values resolved from settings or fallbacks
-  // Prioritas: sambutanKepalaNama (diset admin) → sambutanNama → default data
+  // Prioritas: sambutanKepalaNama (diset admin) ? sambutanNama ? default data
   const infoVisi = settings?.visiText || VISI_MISI.visi;
   const infoMisi = settings?.misiList || VISI_MISI.misi;
   const infoSambutanNama = settings?.sambutanKepalaNama || settings?.sambutanNama || SAMBUTAN_KEPALA_SEKOLAH.nama;
@@ -107,7 +107,7 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
     }
   }, [initialSubTab]);
 
-  // Teacher Profile state — disimpan ke Supabase (teacher_profiles)
+  // Teacher Profile state � disimpan ke Supabase (teacher_profiles)
   const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<'SEMUA' | 'PIMPINAN' | 'TKJ' | 'PEMASARAN' | 'UMUM'>('SEMUA');
@@ -137,8 +137,9 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminLoginError, setAdminLoginError] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherProfile | null>(null);
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Fasilitas state — load dari Supabase
+  // Fasilitas state � load dari Supabase
   const [fasilitasList, setFasilitasList] = useState<import('../types').FasilitasItem[]>([]);
 
   // Load teachers + fasilitas dari Supabase
@@ -689,14 +690,22 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTeachers.length === 0 ? (
                 <div className="md:col-span-2 lg:col-span-3 text-center p-14 bg-white rounded-3xl border border-slate-100 shadow-sm text-slate-400 font-bold text-xs">
-                  ⚠️ Tidak ditemukan data guru yang cocok dengan filter pencarian "{searchQuery}".
+                  ?? Tidak ditemukan data guru yang cocok dengan filter pencarian "{searchQuery}".
                 </div>
               ) : (
                 filteredTeachers.map((t) => {
                   return (
                     <div
                       key={t.id}
-                      onClick={() => setSelectedTeacher(t)}
+                      onClick={(e) => {
+                        setSelectedTeacher(t);
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        // Simpan posisi tengah-bawah kartu (viewport coordinates)
+                        setPopupPos({
+                          top: rect.bottom,           // bawah kartu
+                          left: rect.left + rect.width / 2,  // tengah horizontal kartu
+                        });
+                      }}
                       className="bg-white rounded-3xl overflow-hidden border border-slate-150/80 shadow-md hover:shadow-xl hover:border-orange-400/90 transition-all duration-300 flex flex-col justify-between group relative cursor-pointer"
                     >
                       {/* Top Accent line based on Kategori */}
@@ -739,7 +748,7 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
                           </h3>
                         </div>
 
-                        {/* Kode Guru dari admin — rapi, tidak terpotong */}
+                        {/* Kode Guru dari admin � rapi, tidak terpotong */}
                         <div className="shrink-0">
                           <span className="text-slate-400 text-[8px] font-mono font-bold whitespace-nowrap">
                             {t.kodeGuru}
@@ -939,127 +948,129 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
         {/* DETAIL PROFILE GURU MODAL / LIGHTBOX */}
         {selectedTeacher && (
           <div 
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 font-sans animate-fade-in" 
-            onClick={() => setSelectedTeacher(null)}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 font-sans" 
+            onClick={() => { setSelectedTeacher(null); setPopupPos(null); }}
           >
-            <div 
-              className="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl border-2 border-yellow-300 animate-slide-up flex flex-col md:flex-row text-slate-800"
+            {/* Desktop: popup lebar + layout horizontal */}
+            <div className="hidden md:block w-full max-w-2xl">
+              <div
+                className="bg-white rounded-2xl overflow-hidden shadow-2xl border-2 border-yellow-300 animate-fade-in flex flex-row text-slate-800 max-h-[88vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* ───── KONTEN POPUP ───── */}
+                {/* Mobile drag handle — tidak tampil di desktop */}
+                <div className="hidden" />
+
+                {/* Left: foto */}
+                <div className="w-5/12 bg-gradient-to-br from-yellow-101 via-yellow-100 to-stone-100 relative flex flex-col items-center justify-center p-6 min-h-[380px] shrink-0 border-r border-yellow-150">
+                  <div className="absolute top-4 left-4 bg-yellow-250/80 border border-yellow-300 text-amber-905 px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase font-mono">
+                    KODE: {selectedTeacher.kodeGuru}
+                  </div>
+                  <button onClick={() => { setSelectedTeacher(null); setPopupPos(null); }} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition cursor-pointer hidden md:flex">
+                    <X size={20} />
+                  </button>
+                  <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shrink-0 shadow-xl bg-yellow-50">
+                    <img src={selectedTeacher.foto} alt={selectedTeacher.nama} className="w-full h-full object-cover object-top" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <span className={`inline-block text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase bg-white/95 text-slate-900 shadow-sm border ${selectedTeacher.kategori === 'PIMPINAN' ? 'border-red-200 text-red-700' : selectedTeacher.kategori === 'TKJ' ? 'border-blue-200 text-blue-700' : selectedTeacher.kategori === 'PEMASARAN' ? 'border-emerald-200 text-emerald-700' : 'border-amber-200 text-amber-700'}`}>
+                      {selectedTeacher.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : selectedTeacher.kategori}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: info */}
+                <div className="flex-1 p-7 overflow-y-auto space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="font-extrabold text-xl text-slate-950 leading-tight tracking-tight">{selectedTeacher.nama}</h3>
+                  </div>
+                  <div className="space-y-3 text-xs text-slate-600 font-medium">
+                    <div className="flex py-2.5 border-b border-slate-100 gap-4">
+                      <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Kode Guru</span>
+                      <span className="font-mono text-slate-800 font-bold bg-slate-100/80 border border-slate-200 px-2.5 py-0.5 rounded text-[11px] w-fit">{selectedTeacher.kodeGuru}</span>
+                    </div>
+                    <div className="flex py-2.5 border-b border-slate-100 gap-4">
+                      <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Mata Pelajaran</span>
+                      <span className="text-slate-800 font-extrabold flex items-center gap-1.5"><BookOpen size={13} className="text-orange-500" />{selectedTeacher.mataPelajaran}</span>
+                    </div>
+                    <div className="flex py-2.5 border-b border-slate-100 gap-4">
+                      <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Pendidikan</span>
+                      <span className="text-slate-700 italic font-medium flex items-center gap-1.5"><GraduationCap size={14} className="text-slate-500" />{selectedTeacher.pendidikan}</span>
+                    </div>
+                    <div className="flex py-2.5 border-b border-slate-100 gap-4">
+                      <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Email</span>
+                      <span className="font-mono text-teal-800 font-bold flex items-center gap-1.5"><Mail size={13} className="text-teal-600" />{selectedTeacher.email}</span>
+                    </div>
+                  </div>
+                  <div className="pt-4 flex justify-end">
+                    <button onClick={() => { setSelectedTeacher(null); setPopupPos(null); }} className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-300 font-black text-[11px] uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md">
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: popup di tengah layar — container sudah flex center */}
+            <div
+              className="md:hidden bg-white rounded-2xl overflow-hidden shadow-2xl border-2 border-yellow-300 animate-fade-in text-slate-800 w-[92vw] max-w-sm"
+              style={{ maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' }}
               onClick={(e) => e.stopPropagation()}
             >
-              
-              {/* Left Side: Large Photo with Gorgeous Accent Background */}
-              <div className="md:w-5/12 bg-gradient-to-br from-yellow-101 via-yellow-100 to-stone-100 relative flex flex-col items-center justify-center p-6 min-h-[260px] md:min-h-[380px] shrink-0 border-r border-yellow-150">
-                <div className="absolute top-4 left-4 bg-yellow-250/80 border border-yellow-300 text-amber-905 px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase font-mono">
-                  KODE: {selectedTeacher.kodeGuru}
-                </div>
-                
-                {/* Close button for Mobile inside image area */}
-                <button 
-                  onClick={() => setSelectedTeacher(null)}
-                  className="md:hidden absolute top-4 right-4 bg-slate-950/40 text-white rounded-full p-2 hover:bg-slate-950/60 transition cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
-
-                <div className="w-40 h-40 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-white shrink-0 shadow-xl bg-yellow-50">
-                  <img
-                    src={selectedTeacher.foto}
-                    alt={selectedTeacher.nama}
-                    className="w-full h-full object-cover object-top"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-
-                <div className="mt-4 text-center">
-                  <span className={`inline-block text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase bg-white/95 text-slate-900 shadow-sm border ${
-                    selectedTeacher.kategori === 'PIMPINAN'
-                      ? 'border-red-200 text-red-700'
-                      : selectedTeacher.kategori === 'TKJ'
-                      ? 'border-blue-200 text-blue-700'
-                      : selectedTeacher.kategori === 'PEMASARAN'
-                      ? 'border-emerald-200 text-emerald-700'
-                      : 'border-amber-200 text-amber-700'
-                  }`}>
-                    {selectedTeacher.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : selectedTeacher.kategori}
-                  </span>
-                </div>
-              </div>
-
-              {/* Right Side: Detailed Profile Data */}
-              <div className="md:w-7/12 p-6 md:p-8 flex flex-col justify-between relative space-y-6">
-                
-                {/* Close button for Desktop */}
-                <button 
-                  onClick={() => setSelectedTeacher(null)}
-                  className="hidden md:flex absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
-
-                {/* Header Info */}
-                <div className="space-y-2">
-                  <h3 className="font-extrabold text-lg md:text-xl text-slate-950 leading-tight tracking-tight">
-                    {selectedTeacher.nama}
-                  </h3>
-                </div>
-
-                {/* Information Rows */}
-                <div className="space-y-3.5 text-xs">
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
-                    <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Kode Guru</span>
-                    <span className="font-mono text-slate-800 font-bold bg-slate-100/80 border border-slate-200 px-2.5 py-0.5 rounded text-[11px] w-fit">
-                      {selectedTeacher.kodeGuru}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
-                    <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Mata Pelajaran</span>
-                    <span className="text-slate-800 font-extrabold flex items-center gap-1.5">
-                      <BookOpen size={13} className="text-orange-500" />
-                      {selectedTeacher.mataPelajaran}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
-                    <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Pendidikan</span>
-                    <span className="text-slate-700 italic font-medium flex items-center gap-1.5">
-                      <GraduationCap size={14} className="text-slate-500" />
-                      {selectedTeacher.pendidikan}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
-                    <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Email Kerja</span>
-                    <span className="font-mono text-teal-800 font-bold select-all flex items-center gap-1.5">
-                      <Mail size={13} className="text-teal-600" />
-                      {selectedTeacher.email}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
-                    <span className="w-24 shrink-0 font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Status</span>
-                    <span className="text-emerald-700 font-bold flex items-center gap-1.5 text-[11px]">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      Tenaga Pengajar Aktif &amp; Terverifikasi
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* Footer close */}
-                <div className="pt-4 flex justify-end">
-                  <button 
-                    onClick={() => setSelectedTeacher(null)}
-                    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-300 font-black text-[11px] uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md"
+                {/* Header foto + nama */}
+                <div className="bg-gradient-to-br from-yellow-101 via-yellow-100 to-stone-100 p-5 flex flex-col items-center gap-3 relative border-b border-yellow-150">
+                  <button
+                    onClick={() => { setSelectedTeacher(null); setPopupPos(null); }}
+                    className="absolute top-3 right-3 p-1.5 bg-slate-900/20 hover:bg-slate-900/40 text-slate-700 rounded-full cursor-pointer"
                   >
-                    Tutup Profil Detail
+                    <X size={14} />
+                  </button>
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg bg-yellow-50">
+                    <img src={selectedTeacher.foto} alt={selectedTeacher.nama} className="w-full h-full object-cover object-top" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-extrabold text-sm text-slate-900 leading-tight">{selectedTeacher.nama}</p>
+                    <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border inline-block mt-1 ${
+                      selectedTeacher.kategori === 'PIMPINAN' ? 'bg-red-50 text-red-700 border-red-200' :
+                      selectedTeacher.kategori === 'TKJ' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      selectedTeacher.kategori === 'PEMASARAN' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}>
+                      {selectedTeacher.kategori === 'UMUM' ? 'PENDIDIKAN UMUM' : selectedTeacher.kategori}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Detail info */}
+                <div className="p-4 space-y-3 text-xs">
+                  <div className="flex gap-3 py-2 border-b border-slate-100">
+                    <span className="text-slate-400 font-bold w-20 shrink-0 uppercase tracking-wider text-[9px]">Kode Guru</span>
+                    <span className="font-mono text-slate-800 font-bold bg-slate-100 px-2 py-0.5 rounded">{selectedTeacher.kodeGuru}</span>
+                  </div>
+                  <div className="flex gap-3 py-2 border-b border-slate-100">
+                    <span className="text-slate-400 font-bold w-20 shrink-0 uppercase tracking-wider text-[9px]">Mata Pelajaran</span>
+                    <span className="text-slate-800 font-semibold flex items-center gap-1"><BookOpen size={11} className="text-orange-500 shrink-0" />{selectedTeacher.mataPelajaran}</span>
+                  </div>
+                  <div className="flex gap-3 py-2 border-b border-slate-100">
+                    <span className="text-slate-400 font-bold w-20 shrink-0 uppercase tracking-wider text-[9px]">Pendidikan</span>
+                    <span className="text-slate-700 italic">{selectedTeacher.pendidikan}</span>
+                  </div>
+                  <div className="flex gap-3 py-2">
+                    <span className="text-slate-400 font-bold w-20 shrink-0 uppercase tracking-wider text-[9px]">Email</span>
+                    <span className="font-mono text-teal-700 text-[10px] break-all">{selectedTeacher.email}</span>
+                  </div>
+                </div>
+
+                {/* Tombol tutup */}
+                <div className="px-4 pb-4">
+                  <button
+                    onClick={() => { setSelectedTeacher(null); setPopupPos(null); }}
+                    className="w-full py-2.5 bg-slate-900 text-amber-400 font-black text-[11px] uppercase tracking-wider rounded-xl cursor-pointer"
+                  >
+                    Tutup
                   </button>
                 </div>
-
               </div>
-
-            </div>
           </div>
         )}
 
@@ -1067,3 +1078,4 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
     </div>
   );
 }
+

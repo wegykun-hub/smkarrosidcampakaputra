@@ -1011,7 +1011,7 @@ export default function TentangSekolah({ initialSubTab = "sambutan", settings }:
               </div>
             </div>
 
-            {/* Mobile: popup di tengah layar — container sudah flex center */}
+            {/* Mobile: popup di tengah, dengan overlay */}
             <div
               className="md:hidden bg-white rounded-2xl overflow-hidden shadow-2xl border-2 border-yellow-300 animate-fade-in text-slate-800 w-[92vw] max-w-sm"
               style={{ maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' }}

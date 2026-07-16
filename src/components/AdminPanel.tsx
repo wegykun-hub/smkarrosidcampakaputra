@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RegistrationData, AttendanceRecord, EnrolledStudent, NewsItem, GalleryItem, DashboardSlide, GeneralSettings, ELearningStudentAccount, ELearningTeacherAccount, AdminAccount } from "../types";
 import { TeacherProfile } from "./TentangSekolah";
 import ModalNotif, { useNotif } from "./ModalNotif";
@@ -785,7 +785,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
         : `TEACH-${Date.now().toString().slice(-6)}`,
       kodeGuru: cleanKode,
       nama: cleanNama,
-      jabatan: teacherForm.jabatan || "Tenaga Pengajar",
+      jabatan: teacherForm.jabatan || "",
       kategori: teacherForm.kategori || 'UMUM',
       foto: teacherForm.foto || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
       pendidikan: teacherForm.pendidikan || "",
@@ -1346,7 +1346,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
             </div>
           </>
         ) : (
-          <div className="flex flex-row h-full w-full overflow-hidden relative bg-slate-950 p-2 md:p-3.5 gap-2 md:gap-3.5 font-sans">
+          <div className="flex flex-row h-full w-full overflow-hidden relative bg-white md:bg-slate-950 p-0 md:p-3.5 gap-0 md:gap-3.5 font-sans">
             {/* Backdrop for mobile when sidebar is open */}
             {sidebarOpen && (
               <div 
@@ -1357,13 +1357,15 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
 
             {/* SISI KIRI SIDEBAR (FLOATING & COLLAPSIBLE CARD) */}
             <aside className={`
-              ${sidebarOpen ? (sidebarCompact ? 'w-20' : 'w-64') : 'w-0 overflow-hidden !p-0 !m-0 !border-0'}
-              bg-slate-900 border border-slate-800 text-slate-100 flex flex-col justify-between p-4 shrink-0 select-none
+              ${sidebarOpen ? (sidebarCompact ? 'w-16 md:w-20' : 'w-72 md:w-64') : 'w-0 overflow-hidden !p-0 !m-0 !border-0'}
+              bg-slate-900 border border-slate-800 text-slate-100 flex flex-col justify-between p-3 md:p-4 shrink-0 select-none
               transition-all duration-300 ease-in-out
               fixed inset-y-0 left-0 z-50 lg:sticky lg:h-full
-              rounded-2xl shadow-2xl
+              rounded-none lg:rounded-2xl shadow-2xl
               ${!sidebarOpen ? 'pointer-events-none' : ''}
-            `}>
+            `}
+            style={{ paddingTop: 'max(16px, env(safe-area-inset-top, 16px))' }}
+            >
               <div className="space-y-6">
                 {/* Brand Header */}
                 {sidebarCompact ? (
@@ -1555,12 +1557,16 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                     return (
                       <button
                         key={item.id}
-                        onClick={item.action}
+                        onClick={() => {
+                          item.action();
+                          // Tutup sidebar di mobile setelah pilih menu
+                          if (window.innerWidth < 1024) setSidebarOpen(false);
+                        }}
                         className={`
                           relative group flex items-center cursor-pointer transition-all duration-200 border border-transparent 
                           ${sidebarCompact 
                             ? 'w-11 h-11 justify-center rounded-xl' 
-                            : 'w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold gap-3'
+                            : 'w-full text-left px-3.5 py-3 md:py-2.5 rounded-xl text-xs font-bold gap-3'
                           } 
                           ${isActive 
                             ? 'bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-400/15 border border-amber-300' 
@@ -1568,10 +1574,10 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                           }
                         `}
                       >
-                        <IconComponent size={sidebarCompact ? 18 : 14} className={isActive ? "text-slate-950" : "text-slate-300 group-hover:text-white transition-colors"} />
+                        <IconComponent size={sidebarCompact ? 18 : 15} className={isActive ? "text-slate-950" : "text-slate-300 group-hover:text-white transition-colors"} />
                         
                         {!sidebarCompact && (
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate text-[11px] md:text-xs">{item.label}</span>
                         )}
 
                         {/* HOVER & TOUCH TOOLTIP POPUP (Shows option names when clicked/hovered) */}
@@ -1638,12 +1644,12 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
               </div>
             </aside>
 
-            {/* AREA UTAMA / RIGHT SCROLL BODY (FLOATING WRAP CARD DESIGN) */}
-            <div className="flex-grow overflow-y-auto bg-white relative flex flex-col min-w-0 h-full rounded-2xl border border-gray-200/90 shadow-2xl" id="admin-main-container">
+            {/* AREA UTAMA / RIGHT SCROLL BODY */}
+            <div className="flex-grow overflow-y-auto bg-white relative flex flex-col min-w-0 h-full rounded-none md:rounded-2xl border-0 md:border border-gray-200/90 shadow-none md:shadow-2xl" id="admin-main-container">
               
               {/* STICKY TOP HEADER */}
-              <header className="sticky top-0 z-30 bg-white border-b border-gray-200/80 px-4 py-3 flex items-center justify-between shadow-xs shrink-0 select-none">
-                <div className="flex items-center gap-2.5 flex-wrap">
+              <header className="sticky top-0 z-30 bg-white border-b border-gray-200/80 px-3 md:px-4 py-2.5 flex items-center justify-between shadow-xs shrink-0 select-none">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Hide/Unhide Toggle Button */}
                   <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -1655,71 +1661,47 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                     title={sidebarOpen ? "Sembunyikan Menu" : "Tampilkan Menu"}
                   >
                     <Menu size={16} className="hover:scale-110 transition" />
-                    <span className="text-[10px] sm:text-xs font-black tracking-wide">
-                      {sidebarOpen ? "SEMBUNYIKAN MENU" : "TAMPILKAN MENU"}
+                    <span className="hidden sm:inline text-[10px] font-black tracking-wide">
+                      {sidebarOpen ? "SEMBUNYIKAN" : "MENU"}
                     </span>
                   </button>
 
-                  {/* Compact/Full Toggle Button (only if open) */}
-                  {sidebarOpen && (
-                    <button
-                      onClick={() => setSidebarCompact(!sidebarCompact)}
-                      className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-750 border border-slate-200/70 rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs hidden sm:inline-flex"
-                      title={sidebarCompact ? "Tampilkan Menu Penuh" : "Mampatkan Jadi Ikon Saja"}
-                    >
-                      <Sparkles size={13} className={sidebarCompact ? "text-slate-400" : "text-amber-500 animate-pulse"} />
-                      <span className="text-[10px] sm:text-xs font-black tracking-wide uppercase">
-                        {sidebarCompact ? "LEBARKAN MENU" : "MAMPATKAN MENU"}
-                      </span>
-                    </button>
-                  )}
-
-                  <div className="h-4 w-px bg-slate-200"></div>
-
-                  {/* Tombol Refresh Data dari Supabase */}
+                  {/* Refresh — icon saja di mobile */}
                   <button
                     onClick={async () => {
                       await loadAllData();
-                      // Toast singkat
                       const el = document.createElement('div');
                       el.className = 'fixed top-4 right-4 bg-emerald-600 text-white text-xs font-black px-4 py-2 rounded-xl shadow-lg z-[9999] animate-fade-in';
-                      el.textContent = '✓ Data berhasil diperbarui dari Supabase!';
+                      el.textContent = '✓ Data diperbarui!';
                       document.body.appendChild(el);
                       setTimeout(() => document.body.removeChild(el), 2500);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition cursor-pointer shrink-0"
-                    title="Muat ulang semua data dari Supabase"
+                    className="flex items-center gap-1.5 px-2.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition cursor-pointer shrink-0"
+                    title="Muat ulang data dari Supabase"
                   >
                     <RefreshCw size={12} className="text-emerald-600" />
-                    <span className="hidden sm:inline">Refresh Data</span>
+                    <span className="hidden md:inline">Refresh</span>
                   </button>
 
-                  <div className="h-4 w-px bg-slate-200"></div>
-
-                  {/* Active Tab Indicator Badge */}
-                  <span className="bg-amber-100 text-[#7c2d12] font-black text-[9px] sm:text-[10px] tracking-wider uppercase px-2.5 py-1.5 rounded-xl border border-amber-300">
-                    {activeTab === 'spmb' && "Pendaftar (SPMB)"}
-                    {activeTab === 'siswa_aktif' && "Siswa Aktif"}
-                    {activeTab === 'guru_staff' && "Guru & Staff"}
-                    {activeTab === 'absensi_logs' && "Presensi Bulanan"}
-                    {activeTab === 'rekap_nilai' && "Rekap Nilai Tugas"}
-                    {activeTab === 'akun_elearning' && "E-Learning Akun"}
-                    {activeTab === 'kelola_berita' && "Kelola Berita"}
-                    {activeTab === 'kelola_fasilitas' && "Fasilitas Sekolah"}
-                    {activeTab === 'kelola_mapel' && "Mata Pelajaran"}
-                    {activeTab === 'kelola_galeri' && "Kelola Galeri"}
-                    {activeTab === 'kelola_slides' && "Kelola Slides"}
-                    {activeTab === 'pengaturan_umum' && "Pengaturan Halaman"}
-                    {activeTab === 'kelola_admin' && "Kelola Akun Admin"}
+                  {/* Active Tab Badge — hidden on very small screens */}
+                  <span className="hidden sm:inline-flex bg-amber-100 text-[#7c2d12] font-black text-[9px] tracking-wider uppercase px-2 py-1.5 rounded-xl border border-amber-300 truncate max-w-[120px] md:max-w-none">
+                    {activeTab === 'spmb' && "SPMB"}
+                    {activeTab === 'siswa_aktif' && "Siswa"}
+                    {activeTab === 'guru_staff' && "Guru"}
+                    {activeTab === 'absensi_logs' && "Presensi"}
+                    {activeTab === 'rekap_nilai' && "Nilai"}
+                    {activeTab === 'akun_elearning' && "E-Learning"}
+                    {activeTab === 'kelola_berita' && "Berita"}
+                    {activeTab === 'kelola_fasilitas' && "Fasilitas"}
+                    {activeTab === 'kelola_mapel' && "Mapel"}
+                    {activeTab === 'kelola_galeri' && "Galeri"}
+                    {activeTab === 'kelola_slides' && "Slides"}
+                    {activeTab === 'pengaturan_umum' && "Pengaturan"}
+                    {activeTab === 'kelola_admin' && "Admin"}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="hidden lg:inline-flex items-center gap-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-black px-2.5 py-1.5 rounded-xl uppercase tracking-wider animate-fade-in">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Sesi Admin Aktif
-                  </span>
-
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={onClose}
                     className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition text-xs font-extrabold uppercase flex items-center gap-1 cursor-pointer border border-transparent hover:border-rose-100"
@@ -2702,7 +2684,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                             </div>
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Mata Pelajaran</label>
-                              <input type="text" required value={teacherForm.mataPelajaran} onChange={(e) => setTeacherForm({ ...teacherForm, mataPelajaran: e.target.value })} placeholder="Jaringan Nirkabel..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
+                              <input type="text" required value={teacherForm.mataPelajaran} onChange={(e) => setTeacherForm({ ...teacherForm, mataPelajaran: e.target.value })} placeholder="Masukkan mata pelajaran..." className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-base" />
                             </div>
                             <div className="space-y-1">
                               <label className="font-extrabold text-slate-500 uppercase block tracking-wider">Kategori</label>
@@ -2784,7 +2766,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                               required
                               value={teacherForm.mataPelajaran}
                               onChange={(e) => setTeacherForm({ ...teacherForm, mataPelajaran: e.target.value })}
-                              placeholder="Contoh: Jaringan Nirkabel"
+                              placeholder="Masukkan mata pelajaran..."
                               className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500"
                             />
                           </div>
@@ -3181,7 +3163,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                       Belum ada data riwayat presensi yang sesuai dengan kriteria filter absensi Anda saat ini atau kelas yang Anda pilih.
                     </div>
                   ) : (
-                    <div className="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm">
+                     <div className="overflow-x-auto"><div className="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="bg-slate-900 text-white font-extrabold text-[10px] tracking-wider uppercase border-b border-orange-500/30">
@@ -3287,6 +3269,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         </tbody>
                       </table>
                     </div>
+                     </div>
                   )}
                 </div>
               </div>
@@ -3352,8 +3335,8 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                       <p className="font-bold text-sm">Belum ada data pengumpulan tugas</p>
                       <p className="text-xs text-slate-400">Tugas yang dikumpulkan siswa akan muncul di sini</p>
                     </div>
-                  ) : (
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                   ) : (
+                     <div className="overflow-x-auto"><div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
                           <tr className="bg-amber-50 border-b border-amber-100">
@@ -3449,6 +3432,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         </tbody>
                       </table>
                     </div>
+                     </div>
                   )}
                 </div>
               </div>
@@ -3750,7 +3734,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                             <option value="">-- Pilih Guru --</option>
                             {(teachers as any[]).map((t: any) => (
                               <option key={t.kodeGuru || t.id} value={t.nama}>
-                                {t.nama} {t.jabatan ? `(${t.jabatan})` : ''}
+                                {t.nama}
                               </option>
                             ))}
                           </select>
@@ -3784,7 +3768,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                       <p className="text-xs">Klik "Tambah Mata Pelajaran" untuk mulai</p>
                     </div>
                   ) : (
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                     <div className="overflow-x-auto"><div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
                           <tr className="bg-orange-50 border-b border-orange-100">
@@ -3840,6 +3824,7 @@ export default function AdminPanel({ onClose, newsList = [], setNewsList, galler
                         </tbody>
                       </table>
                     </div>
+                     </div>
                   )}
                 </div>
               </div>
